@@ -5,18 +5,13 @@ import sub from './sub.js';
 
 /* =========== Client ========== */
 const client = new Client({
-  phoneNumber: '20123456789', // Bot number
+  phoneNumber: process.env.BOT_NUMBER || '201044019293', // Bot number
+  sessionPath: process.env.SESSION_PATH || './session',
   prefix: [".", "/", "!"],
   fromMe: false, 
   owners: [
-  // Owner 1
-    { name: "VA", lid: "247579682029763@lid", jid: "972569311531@s.whatsapp.net" },
-  // Owner 2
-    { name: "emam", lid: "221307316789354@lid", jid: "201144480436@s.whatsapp.net" },
-  // Owner 3
-    { name: "Sukuna", jid: "201033024135@s.whatsapp.net", lid: "50414477168824@lid" },
-  // Owner 4 
-   { name: "عمورتي", jid: "201050079089@s.whatsapp.net", lid: "51664513925368@lid" }
+    { name: "Erin", jid: "201044013292@s.whatsapp.net", lid: "" },
+    { name: "Erin2", jid: "201044019293@s.whatsapp.net", lid: "" }
   ],
   settings: { noWelcome: false },
   commandsPath: './plugins'
@@ -38,7 +33,7 @@ config.info = {
   idChannel: "120363225356834044@newsletter",
   urls: {
     repo: "https://github.com/deveni0/Pomni-AI",
-    api: "https://emam-api.web.id",
+    
     channel: "https://whatsapp.com/channel/0029VaQim2bAu3aPsRVaDq3v"
   },
   copyright: { 
