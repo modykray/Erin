@@ -43,7 +43,7 @@ const context = (jid, img) => ({
     forwardingScore: 1,
     forwardedNewsletterMessageInfo: {
         newsletterJid: '120363225356834044@newsletter',
-        newsletterName: '𝐕𝐈𝐈7 ~ 𝐂𝐡𝐚𝐧𝐧𝐞𝐥 🕷️',
+        newsletterName: 'Erin ~ Bot',
         serverMessageId: 0
     },
     externalAdReply: {
@@ -117,7 +117,7 @@ menu.before = async (m, { conn, bot }) => {
 ${cmdsList}
 
 ╭─┈─┈─┈─⟞${cat[3]}⟝─┈─┈─┈─╮
-┃ *⌯︙𝐕𝐈𝐈7 ~ ${bot.config.info.nameBot}*
+┃ *⌯︙Erin ~ ${bot.config.info.nameBot}*
 ╰─┈─┈─┈─⟞${cat[3]}⟝─┈─┈─┈─╯
 > *رَبَّنَا اغْفِرْ لَنَا وَلِإِخْوَانِنَا*`.trim(),
         contextInfo: context(m.sender, getImg(bot))

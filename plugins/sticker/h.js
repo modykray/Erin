@@ -9,7 +9,7 @@ const test = async (m, { conn, args }) => {
     return m.reply("📝 *الاستخدام الصحيح:*\n\n.حقوق اسم الباك | اسم المؤلف\n\n*مثال:*\n`.حقوق venom | 2010`");
   }
   
-  if (!pack) pack = "VA";
+  if (!pack) pack = "Erin";
   if (author === undefined) author = null;
   
   const q = await m.quoted;
@@ -34,7 +34,7 @@ const context = (jid, img) => ({
     forwardingScore: 1,
     forwardedNewsletterMessageInfo: {
         newsletterJid: '120363225356834044@newsletter',
-        newsletterName: '𝐕𝐈𝐈7 ~ 𝐂𝐡𝐚𝐧𝐧𝐞𝐥 🕷️',
+        newsletterName: 'Erin ~ Bot',
         serverMessageId: 0
     },
     externalAdReply: {

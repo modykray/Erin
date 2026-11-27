@@ -8,7 +8,7 @@ const context = (jid, img) => ({
     forwardingScore: 1,
     forwardedNewsletterMessageInfo: {
         newsletterJid: '120363225356834044@newsletter',
-        newsletterName: '𝐕𝐈𝐈7 ~ 𝐂𝐡𝐚𝐧𝐧𝐞𝐥 🕷️',
+        newsletterName: 'Erin ~ Bot',
         serverMessageId: 0
     },
     externalAdReply: {
@@ -24,7 +24,7 @@ const { images } = bot.config.info;
 const img = images.random()
 await conn.sendMessage(m.chat, { 
   text: `
-GitHub: _*https://github.com/deveni0/Pomni-AI/tree/main*_
+GitHub: _*https://github.com/modykray/Erin*_
 
 Video: _*https://youtu.be/hA5aCpvesJE?si=pHAEsbDFTVXe2_sq*_
 

@@ -1,5 +1,5 @@
 /* 
-by: VA ~ VENOM
+by: Erin
 */
 
 const example = async (m, { conn }) => {
@@ -13,7 +13,7 @@ conn.msgUrl(m.chat,
     big: true,
     mentions: ['201234567890@s.whatsapp.net', '201111111111@s.whatsapp.net'],
     newsletter: {
-      name: '𝐕𝐈𝐈7 ~ 𝐂𝐡𝐚𝐧𝐧𝐞𝐥 🕷️',
+      name: 'Erin ~ Bot',
       jid: '120363225356834044@newsletter'
     }
   },

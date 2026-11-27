@@ -9,12 +9,12 @@ const { data } = JSON.parse(res);
   caption: `# Boy 🚹`,
   buttons: [
 
-        { name: "cta_url", params: { display_text: "📎╎ قــنــاتــي ", url: "https://whatsapp.com/channel/0029Vb3UUKz3QxS3bgWmTc3x" } },
+        { name: "cta_url", params: { display_text: "📎╎ قــنــاتــي ", url: "https://github.com/modykray/Erin" } },
 
   ], 
   mentions: [m.sender],
   newsletter: {
-      name: '𝐕𝐈𝐈7 ~ 𝐂𝐡𝐚𝐧𝐧𝐞𝐥 🕷️',
+      name: 'Erin ~ Bot',
       jid: '120363225356834044@newsletter'
     },
 }, global.reply_status)
@@ -32,7 +32,7 @@ return await conn.sendButtonNormal(m.chat, {
   ], 
   mentions: [m.sender],
   newsletter: {
-      name: '𝐕𝐈𝐈7 ~ 𝐂𝐡𝐚𝐧𝐧𝐞𝐥 🕷️',
+      name: 'Erin ~ Bot',
       jid: '120363225356834044@newsletter'
     },
 }, global.reply_status)

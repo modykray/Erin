@@ -53,9 +53,9 @@ const handler = async (m, { conn, bot, config }) => {
 
 ——> *الـمـالـكـيـن 👑*
 - *العدد:* \`${bot.owners?.length || 0}\`
-- *الرئيسي:* \`${bot.owners?.[0]?.name || 'VA'} (${bot.owners?.[0]?.jid?.split('@')[0] || 'لا يوجد'})\`
+- *الرئيسي:* \`${bot.owners?.[0]?.name || 'Erin'} (${bot.owners?.[0]?.jid?.split('@')[0] || 'لا يوجد'})\`
 
-> *_VII7 BOT SYSTEM_*`;
+> *_Erin BOT SYSTEM_*`;
 
   await conn.sendMessage(m.chat, {
     text: msg,
@@ -73,7 +73,7 @@ const context = (jid, img) => ({
     forwardingScore: 1,
     forwardedNewsletterMessageInfo: {
         newsletterJid: '120363225356834044@newsletter',
-        newsletterName: '𝐕𝐈𝐈7 ~ 𝐂𝐡𝐚𝐧𝐧𝐞𝐥 🕷️',
+        newsletterName: 'Erin ~ Bot',
         serverMessageId: 0
     },
     externalAdReply: {
