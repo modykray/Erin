@@ -32,7 +32,7 @@ async function test(m, { conn, bot, text }) {
       cards: cards,
       mentions: [m.sender],
       newsletter: {
-      name: 'Erin ~ Bot',
+      name: 'إيرن ييغر',
       jid: '120363225356834044@newsletter'
     },
     }, reply_status);

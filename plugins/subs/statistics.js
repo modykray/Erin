@@ -19,7 +19,7 @@ const run = async (m, { conn, bot }) => {
 ⊱⋅ ──────────── ⋅⊰
 🆔 — البوت الرئيسي: ${bot.sock.user.id.split('@')[0]}
 ⊱⋅ ──────────── ⋅⊰
-> *_Erin SubBot System_*`;
+> *_إيرن ييغر SubBot System_*`;
 
   await m.reply(text);
 };

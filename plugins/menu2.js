@@ -32,7 +32,7 @@ const context = (jid, img) => ({
     forwardingScore: 1,
     forwardedNewsletterMessageInfo: {
         newsletterJid: '120363225356834044@newsletter',
-        newsletterName: 'Erin ~ Bot',
+        newsletterName: 'إيرن ييغر',
         serverMessageId: 0
     },
     externalAdReply: {
@@ -89,7 +89,7 @@ const uptimeFormatted = `${String(hours).padStart(2, '0')}:${String(minutes).pad
             }],
             mentions: [m.sender],
             newsletter: {
-                name: 'Erin ~ Bot',
+                name: 'إيرن ييغر',
                 jid: '120363225356834044@newsletter'
             }
         }, global.reply_status);
@@ -120,7 +120,7 @@ const uptimeFormatted = `${String(hours).padStart(2, '0')}:${String(minutes).pad
 ${cmdsList}
 
 ╭─┈─┈─┈─⟞${cat[3]}⟝─┈─┈─┈─╮
-┃ *⌯︙Erin ~ ${bot?.config?.info?.nameBot || 'Erin'}*
+┃ *⌯︙Erin ~ ${bot?.config?.info?.nameBot || 'إيرن ييغر'}*
 ╰─┈─┈─┈─⟞${cat[3]}⟝─┈─┈─┈─╯
 > *رَبَّنَا اغْفِرْ لَنَا وَلِإِخْوَانِنَا*`.trim(), contextInfo: context(m.sender, getImg(bot)) }, { quoted: m });
 }

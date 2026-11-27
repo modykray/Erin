@@ -1,4 +1,4 @@
-# Erin - WhatsApp Bot
+# إيرن ييغر - WhatsApp Bot
 
 A WhatsApp bot owned and run by Erin (modykray), built on the MeowSab framework.
 

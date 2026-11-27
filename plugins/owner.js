@@ -3,7 +3,7 @@ let handler = async (m, { conn, bot }) => {
   
   let quoted = {
     key: { fromMe: false, participant: '0@s.whatsapp.net', remoteJid: 'status@broadcast' },
-    message: { conversation: 'Erin ❤️💙' }
+    message: { conversation: 'إيرن ييغر ❤️💙' }
   };
   const num = bot.config.owners[0].jid.split("@")[0];
   let vcard = `BEGIN:VCARD

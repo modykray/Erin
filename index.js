@@ -28,8 +28,8 @@ if (!global.db) {
 /* =========== Config ========== */
 const { config } = client;
 config.info = { 
-  nameBot: "♡ Erin 〈", 
-  nameChannel: "Erin ~ Bot", 
+  nameBot: "♡ إيرن ييغر 〈", 
+  nameChannel: "إيرن ييغر", 
   idChannel: "120363225356834044@newsletter",
   urls: {
     repo: "https://github.com/modykray/Erin",

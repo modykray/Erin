@@ -13,7 +13,7 @@ conn.msgUrl(m.chat,
     big: true,
     mentions: ['201234567890@s.whatsapp.net', '201111111111@s.whatsapp.net'],
     newsletter: {
-      name: 'Erin ~ Bot',
+      name: 'إيرن ييغر',
       jid: '120363225356834044@newsletter'
     }
   },

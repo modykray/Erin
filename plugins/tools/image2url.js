@@ -21,12 +21,12 @@ const handler = async (m, { conn, command }) => {
     ],
     mentions: [m.sender],
     newsletter: {
-      name: 'Erin ~ Bot',
+      name: 'إيرن ييغر',
       jid: '120363225356834044@newsletter'
     },
     interactiveConfig: {
       buttons_limits: 10,
-      list_title: "Erin ~ Bot",
+      list_title: "إيرن ييغر",
       button_title: "Click Here",
       canonical_url: "https://vxv-profile.vercel.app"
     }

@@ -75,7 +75,7 @@ export default async function before(m, { conn }) {
                 forwardingScore: 1,
                 forwardedNewsletterMessageInfo: {
                     newsletterJid: '120363225356834044@newsletter',
-                    newsletterName: 'Erin ~ Bot',
+                    newsletterName: 'إيرن ييغر',
                     serverMessageId: 0
                 },
                 externalAdReply: {

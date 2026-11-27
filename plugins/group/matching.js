@@ -14,7 +14,7 @@ const { data } = JSON.parse(res);
   ], 
   mentions: [m.sender],
   newsletter: {
-      name: 'Erin ~ Bot',
+      name: 'إيرن ييغر',
       jid: '120363225356834044@newsletter'
     },
 }, global.reply_status)
@@ -32,7 +32,7 @@ return await conn.sendButtonNormal(m.chat, {
   ], 
   mentions: [m.sender],
   newsletter: {
-      name: 'Erin ~ Bot',
+      name: 'إيرن ييغر',
       jid: '120363225356834044@newsletter'
     },
 }, global.reply_status)

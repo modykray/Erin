@@ -51,7 +51,7 @@ const run = async (m, { conn, bot }) => {
 ✓🌹 الـبـوتـات: ${activeBots.length}
 ✓🫒 الـجـروبـات: ${groupCount}
 ⊱⋅ ──────────── ⋅⊰
-> *_Erin SubBot System_*`);
+> *_إيرن ييغر SubBot System_*`);
 };
 
 run.command = ["اذاعة_فرعي", "اذاعه_فرعي"];

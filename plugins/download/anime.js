@@ -37,7 +37,7 @@ let handler = async (m, { conn, text, command }) => {
       ], 
       mentions: [m.sender],
       newsletter: {
-        name: 'Erin ~ Bot',
+        name: 'إيرن ييغر',
         jid: '120363225356834044@newsletter'
       },
     }, m)
@@ -70,7 +70,7 @@ let handler = async (m, { conn, text, command }) => {
       ],
       mentions: [m.sender],
       newsletter: {
-        name: 'Erin ~ Bot',
+        name: 'إيرن ييغر',
         jid: '120363225356834044@newsletter'
       },
     }, m)
@@ -106,7 +106,7 @@ let handler = async (m, { conn, text, command }) => {
       ],
       mentions: [m.sender],
       newsletter: {
-        name: 'Erin ~ Bot',
+        name: 'إيرن ييغر',
         jid: '120363225356834044@newsletter'
       },
     }, m)
@@ -127,7 +127,7 @@ let handler = async (m, { conn, text, command }) => {
   ], 
   mentions: [m.sender],
   newsletter: {
-      name: 'Erin ~ Bot',
+      name: 'إيرن ييغر',
       jid: '120363225356834044@newsletter'
     },
 }, m)
