@@ -70,19 +70,44 @@ const chTimer = setInterval(async () => {
 /* =========== Start ========== */
 client.start();
 
-/* debug: log every outgoing send result */
-const dbgTimer = setInterval(() => {
+/* LID -> phone-number JID for replies, plus send logging */
+const lidToPn = new Map();
+const wrapTimer = setInterval(() => {
   const sock = client.sock;
-  if (!sock || sock.__dbg || typeof sock.sendMessage !== 'function') return;
-  sock.__dbg = true;
-  const orig = sock.sendMessage.bind(sock);
-  sock.sendMessage = async (jid, content, opts) => {
-    try {
-      const r = await orig(jid, content, opts);
-      console.log('[ERIN-SEND] ok', jid, r?.key?.id, r?.status);
-      return r;
-    } catch (e) { console.error('[ERIN-SEND] FAIL', jid, e?.message); throw e; }
+  if (!sock || sock.__erinWrapped || typeof sock.sendMessage !== 'function') return;
+  sock.__erinWrapped = true;
+  try {
+    sock.ev.on('messages.upsert', ({ messages }) => {
+      for (const m of messages || []) {
+        const k = m.key || {};
+        const alt = k.remoteJidAlt || k.senderPn || k.participantPn;
+        if (k.remoteJid?.endsWith('@lid') && alt?.endsWith('@s.whatsapp.net')) lidToPn.set(k.remoteJid, alt);
+      }
+    });
+  } catch (e) { console.error('[ERIN-LID] listener failed:', e?.message); }
+  const resolve = async (jid) => {
+    if (typeof jid !== 'string' || !jid.endsWith('@lid')) return jid;
+    let pn = lidToPn.get(jid);
+    if (!pn) {
+      try { pn = await sock.signalRepository?.lidMapping?.getPNForLID?.(jid); } catch {}
+      if (pn && !pn.includes('@')) pn += '@s.whatsapp.net';
+      if (pn) pn = pn.replace(/:\d+@/, '@');
+    }
+    if (pn) { lidToPn.set(jid, pn); return pn; }
+    return jid;
   };
+  for (const fn of ['sendMessage', 'relayMessage']) {
+    const orig = sock[fn]?.bind(sock);
+    if (!orig) continue;
+    sock[fn] = async (jid, ...rest) => {
+      const to = await resolve(jid);
+      try {
+        const r = await orig(to, ...rest);
+        console.log('[ERIN-SEND]', fn, jid === to ? 'to' : 'lid->pn', jid, '=>', to, r?.key?.id || '');
+        return r;
+      } catch (e) { console.error('[ERIN-SEND] FAIL', fn, to, e?.message); throw e; }
+    };
+  }
 }, 3000);
 
 
