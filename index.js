@@ -101,7 +101,7 @@ const isGroupAdminMsg = async (m) => {
     if (!chat.endsWith('@g.us')) return false;
     let e = adminCache.get(chat);
     if (!e || Date.now() - e.t > 60000) {
-      const md = await sock.groupMetadata(chat);
+      const md = await client.sock.groupMetadata(chat);
       const ids = new Set();
       for (const p of md.participants || []) if (p.admin) [p.id, p.lid, p.jid, p.phoneNumber].forEach(x => x && ids.add(numOf(x)));
       e = { t: Date.now(), ids }; adminCache.set(chat, e);
@@ -116,7 +116,7 @@ const ownerIdsIn = async (chat) => {
   if (e && Date.now() - e.t < 60000) return e.ids;
   const ids = new Set([...OWNER_NUMS, ...OWNER_LIDS]);
   try {
-    const md = await sock.groupMetadata(chat);
+    const md = await client.sock.groupMetadata(chat);
     for (const p of md.participants || []) {
       const all = [p.id, p.lid, p.jid, p.phoneNumber].filter(Boolean).map(numOf);
       if (all.some(x => OWNER_NUMS.has(x) || OWNER_LIDS.has(x))) all.forEach(x => ids.add(x));
