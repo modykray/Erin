@@ -89,7 +89,9 @@ const isOwnerMsg = (m) => {
 const powerHook = async (m) => {
   try {
     const t = (m.text || m.body || '').trim();
-    const cmd = (t.match(/^[.\/!]?\s*(بور_اوف|بور_اون)\s*$/) || [])[1];
+    const flat = t.replace(/[^\p{L}]/gu, '');
+    const cmd = t.length <= 24 ? (flat === 'بوراوف' ? 'بور_اوف' : flat === 'بوراون' ? 'بور_اون' : undefined) : undefined;
+    if (cmd) console.log('[ERIN-POWER] cmd', cmd, 'owner?', isOwnerMsg(m), JSON.stringify({ sender: m.sender, key: m.key }));
     if (cmd && isOwnerMsg(m)) {
       if (cmd === 'بور_اون') { setPower(false); try { await m.reply('*✅ البوت اشتغل تاني*'); } catch {} }
       else { try { await m.reply('*⛔ البوت اتقفل، اكتب بور_اون عشان يشتغل*'); } catch {} setPower(true); }
