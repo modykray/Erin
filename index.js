@@ -107,10 +107,13 @@ const powerHook = async (m) => {
     }
     const flat2 = t.replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/[^\p{L}]/gu, '');
     if (!globalThis.erinOff && t.length <= 14 && (flat2 === 'ايرن' || flat2 === 'ايرين') && isOwnerMsg(m)) {
-      const on = !globalThis.erinAdminOnly;
-      if (!on) setAdminOnly(false);
-      try { await m.reply(on ? '*🔒 وضع المالك فقط شغال، البوت هيتفاعل معاك انت بس. اكتب ايرن تاني عشان ترجعه للكل*' : '*🔓 وضع المالك فقط اتقفل، البوت رجع يرد على الكل*'); } catch {}
-      if (on) setAdminOnly(true);
+      try { await m.reply('*🔒 وضع المالك فقط شغال، البوت هيتفاعل معاك انت بس. اكتب عام عشان يرجع للكل*'); } catch {}
+      setAdminOnly(true);
+      return true;
+    }
+    if (!globalThis.erinOff && t.length <= 10 && flat2 === 'عام' && isOwnerMsg(m)) {
+      setAdminOnly(false);
+      try { await m.reply('*🔓 رجع للكل، البوت بيرد على الكل تاني*'); } catch {}
       return true;
     }
     if (globalThis.erinAdminOnly && !globalThis.erinOff && !isOwnerMsg(m)) return true;
