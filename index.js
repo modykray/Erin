@@ -128,6 +128,7 @@ const ownerIdsIn = async (chat) => {
 globalThis.erinOwnerIdsIn = ownerIdsIn;
 const PROTECTED_CMDS = new Set(['طرد','خفض','حذف','كتم','انذار','تحذير','warn','حذفانذار','حذفالانذار','ضيف']);
 const OWNER_ONLY_CMDS = new Set([]);
+globalThis.erinIsOwnerMsg = isOwnerMsg;
 const protectHook = async (m) => {
   try {
     const t = (m.text || m.body || '').trim();
