@@ -67,6 +67,46 @@ const chTimer = setInterval(async () => {
   } catch (e) { console.log('channel resolve failed:', e?.message); }
 }, 20000);
 
+/* ===== Power switch: بور_اوف / بور_اون (owner only). State persists in /data ===== */
+import fs from 'fs';
+const POWER_FILE = (process.env.SESSION_PATH ? process.env.SESSION_PATH.replace(/\/[^/]*$/, '') : '.') + '/erin_power_off';
+const OWNER_NUMS = new Set(['201044013292', '201044019293']);
+const OWNER_LIDS = new Set(['168659775398062']);
+globalThis.erinOff = false;
+try { if (!process.env.ERIN_FORCE_ON && fs.existsSync(POWER_FILE)) globalThis.erinOff = true; } catch {}
+const setPower = (off) => {
+  globalThis.erinOff = off;
+  try { off ? fs.writeFileSync(POWER_FILE, String(Date.now())) : fs.rmSync(POWER_FILE, { force: true }); } catch (e) { console.error('[ERIN-ERR] power file', e?.message); }
+  console.log('[ERIN-POWER]', off ? 'OFF' : 'ON');
+};
+const numOf = (j) => (j || '').split(':')[0].split('@')[0];
+const isOwnerMsg = (m) => {
+  if (m.isOwner) return true;
+  const k = m.key || {};
+  return [m.sender, k.participant, k.participantAlt, k.remoteJid, k.remoteJidAlt].some(j => j && (OWNER_NUMS.has(numOf(j)) || OWNER_LIDS.has(numOf(j)))) && !(k.remoteJid || '').endsWith('@g.us') ||
+    [m.sender, k.participant, k.participantAlt].some(j => j && (OWNER_NUMS.has(numOf(j)) || OWNER_LIDS.has(numOf(j))));
+};
+const powerHook = async (m) => {
+  try {
+    const t = (m.text || m.body || '').trim();
+    const cmd = (t.match(/^[.\/!]?\s*(بور_اوف|بور_اون)\s*$/) || [])[1];
+    if (cmd && isOwnerMsg(m)) {
+      if (cmd === 'بور_اون') { setPower(false); try { await m.reply('*✅ البوت اشتغل تاني*'); } catch {} }
+      else { try { await m.reply('*⛔ البوت اتقفل، اكتب بور_اون عشان يشتغل*'); } catch {} setPower(true); }
+      return true;
+    }
+    if (globalThis.erinOff) return true;
+  } catch (e) { console.error('[ERIN-ERR] powerHook', e?.message); }
+  return false;
+};
+const powerTimer = setInterval(() => {
+  const cs = client.commandSystem;
+  if (!cs || !Array.isArray(cs.beforeHandlers)) return;
+  clearInterval(powerTimer);
+  cs.beforeHandlers.unshift(powerHook);
+  console.log('[ERIN-POWER] hook installed, off =', globalThis.erinOff);
+}, 1000);
+
 /* one-shot direct send test (only when DIRECT_TEST_TO is set) */
 let directDone = false;
 const directTimer = setInterval(async () => {
@@ -123,6 +163,7 @@ const wrapTimer = setInterval(() => {
     const orig = sock[fn]?.bind(sock);
     if (!orig) continue;
     sock[fn] = async (jid, ...rest) => {
+      if (globalThis.erinOff) { console.log('[ERIN-POWER] send blocked while off'); return { key: { id: 'ERIN-OFF', remoteJid: jid, fromMe: true } }; }
       const to = await resolve(jid);
       if (fn === 'sendMessage' && rest[0] && typeof rest[0] === 'object') {
         try {
