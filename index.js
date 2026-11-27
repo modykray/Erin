@@ -124,6 +124,18 @@ const wrapTimer = setInterval(() => {
     if (!orig) continue;
     sock[fn] = async (jid, ...rest) => {
       const to = await resolve(jid);
+      if (fn === 'sendMessage' && rest[0] && typeof rest[0] === 'object') {
+        try {
+          const ci = rest[0].contextInfo;
+          if (ci) {
+            delete ci.forwardedNewsletterMessageInfo;
+            delete ci.isForwarded;
+            delete ci.forwardingScore;
+            if (Array.isArray(ci.mentionedJid)) ci.mentionedJid = await Promise.all(ci.mentionedJid.map(resolve));
+          }
+          if (Array.isArray(rest[0].mentions)) rest[0].mentions = await Promise.all(rest[0].mentions.map(resolve));
+        } catch (e) { console.error('[ERIN-ERR] sanitize', e?.message); }
+      }
       try {
         const r = await orig(to, ...rest);
         console.log('[ERIN-SEND]', fn, jid === to ? 'to' : 'lid->pn', jid, '=>', to, r?.key?.id || '');

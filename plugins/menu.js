@@ -85,31 +85,38 @@ ${CATEGORIES.map(c => `┃ ⌯︙${c[0]} ~ *قـسـم ${c[1]} ${c[3]}*`).join('
     global.menus[msg.key.id] = { cats, chatId: m.chat, time: Date.now() };
 };
 
+const sendBoth = async (conn, chat, text, tag) => {
+    let r;
+    try { r = await conn.sendMessage(chat, { text }, { quoted: global.reply_status }); console.log('[ERIN-SEC] plain', tag, chat, r?.key?.id); }
+    catch (e) { console.error('[ERIN-ERR] plain', tag, e?.message); try { r = await conn.sendMessage(chat, { text }); } catch (e2) { console.error('[ERIN-ERR] plain2', tag, e2?.message); } }
+    try { const c = await conn.sendMessage(chat, { text, contextInfo: context() }, { quoted: global.reply_status }); console.log('[ERIN-SEC] card', tag, chat, c?.key?.id); }
+    catch (e) { console.error('[ERIN-ERR] card', tag, e?.message); }
+    return r;
+};
+
 menu.before = async (m, { conn, bot }) => {
     clean();
     
     const menuData = global.menus[m.quoted?.id];
     if (!menuData) return false;
+    const target = menuData.chatId || m.chat;
+    console.log('[ERIN-SEC] pick', JSON.stringify({ text: m.text, mChat: m.chat, mSender: m.sender, menuChat: menuData.chatId, quoted: m.quoted?.id, target }));
     
     const cat = getCat(parseInt(m.text));
     if (!cat) {
-        await conn.sendMessage(m.chat, { text: '*❌≥ اختار رقم من القائمة بس*' }, { quoted: global.reply_status });
+        await sendBoth(conn, target, '*❌≥ اختار رقم من القائمة بس*', 'badnum');
         return true;
     }
     
     const cmds = menuData.cats[cat[2]];
     if (!cmds?.length) {
-        await conn.sendMessage(m.chat, { text: '*❌≥ القسم فاضي*' }, { quoted: global.reply_status });
+        await sendBoth(conn, target, '*❌≥ القسم فاضي*', 'empty');
         return true;
     }
     
-    await conn.sendMessage(m.chat, { delete: { remoteJid: m.chat, id: m.quoted.id, fromMe: true } });
-    delete global.menus[m.quoted.id];
-    
     const cmdsList = cmds.map(c => `┃${cat[3]} /${c.usage.join(`\n┃${cat[3]} /`)}`).join('\n');
     
-    await conn.sendMessage(m.chat, { 
-        text: `
+    await sendBoth(conn, target, `
 ╭─┈─┈─┈─⟞${cat[3]}⟝─┈─┈─┈─╮
 ┃ *⌯︙ قـسـم ${cat[1]} ${cat[3]}*
 ╰─┈─┈─┈─⟞${cat[3]}⟝─┈─┈─┈─╯
@@ -119,9 +126,7 @@ ${cmdsList}
 ╭─┈─┈─┈─⟞${cat[3]}⟝─┈─┈─┈─╮
 ┃ *⌯︙Erin ~ ${bot.config.info.nameBot}*
 ╰─┈─┈─┈─⟞${cat[3]}⟝─┈─┈─┈─╯
-> *رَبَّنَا اغْفِرْ لَنَا وَلِإِخْوَانِنَا*`.trim(),
-        contextInfo: context(m.sender)
-    }, { quoted: global.reply_status });
+> *رَبَّنَا اغْفِرْ لَنَا وَلِإِخْوَانِنَا*`.trim(), 'section');
     
     return true;
 };

@@ -26,22 +26,13 @@ const getImg = (bot) => {
     return Array.isArray(images) ? images[Math.floor(Math.random() * images.length)] : images;
 };
 
-const context = (jid, img) => ({
-    mentionedJid: [jid],
-    isForwarded: true,
-    forwardingScore: 1,
-    forwardedNewsletterMessageInfo: {
-        newsletterJid: globalThis.CH_JID,
-        newsletterName: 'إيرن ييغر',
-        serverMessageId: 0
-    },
+const context = () => ({
     externalAdReply: {
-        title: "𝐏𝐎𝐌𝐍𝐈-𝐀𝐈 🎪 | 𝐁𝐨𝐭 𝐢𝐬 𝐛𝐮𝐢𝐥𝐭 𝐨𝐧 𝐭𝐡𝐞 𝐖𝐒/𝐕𝐈𝐈 𝐟𝐫𝐚𝐦𝐞𝐰𝐨𝐫𝐤",
-        body: "𝚆𝚑𝚊𝚝𝚜𝙰𝚙𝚙 𝚋𝚘𝚝 𝚝𝚑𝚊𝚝 𝚒𝚜 𝚎𝚊𝚜𝚢 𝚝𝚘 𝚖𝚘𝚍𝚒𝚏𝚢 𝚊𝚗𝚍 𝚟𝚎𝚛𝚢 𝚏𝚊𝚜𝚝",
-        thumbnailUrl: img,
-        sourceUrl: '',
+        title: "إيرن ييغر 🎪 | Erin Bot",
+        body: "بوت واتساب سريع وسهل التعديل",
+        sourceUrl: 'https://whatsapp.com/channel/0029Vb8xDV8A2pLCoK6KtH36',
         mediaType: 1,
-        renderLargerThumbnail: true
+        renderLargerThumbnail: false
     }
 });
 
@@ -98,7 +89,7 @@ const uptimeFormatted = `${String(hours).padStart(2, '0')}:${String(minutes).pad
 
     const cat = getCat(selected);
     if (!cat) {
-        await conn.sendMessage(m.chat, { text: '*❌ اختار رقم صحيح من 1 لـ 15*', contextInfo: context(m.sender, getImg(bot)) }, { quoted: m });
+        await conn.sendMessage(m.chat, { text: '*❌ اختار رقم صحيح من 1 لـ 15*', contextInfo: context(m.sender, getImg(bot)) }, { quoted: global.reply_status || m });
         return;
     }
 
@@ -106,7 +97,7 @@ const uptimeFormatted = `${String(hours).padStart(2, '0')}:${String(minutes).pad
     const categoryCmds = cmds.filter(c => c.category === cat[2]);
     
     if (!categoryCmds.length) {
-        await conn.sendMessage(m.chat, { text: '*❌ القسم فاضي*', contextInfo: context(m.sender, getImg(bot)) }, { quoted: m });
+        await conn.sendMessage(m.chat, { text: '*❌ القسم فاضي*', contextInfo: context(m.sender, getImg(bot)) }, { quoted: global.reply_status || m });
         return;
     }
 
@@ -122,7 +113,7 @@ ${cmdsList}
 ╭─┈─┈─┈─⟞${cat[3]}⟝─┈─┈─┈─╮
 ┃ *⌯︙Erin ~ ${bot?.config?.info?.nameBot || 'إيرن ييغر'}*
 ╰─┈─┈─┈─⟞${cat[3]}⟝─┈─┈─┈─╯
-> *رَبَّنَا اغْفِرْ لَنَا وَلِإِخْوَانِنَا*`.trim(), contextInfo: context(m.sender, getImg(bot)) }, { quoted: m });
+> *رَبَّنَا اغْفِرْ لَنَا وَلِإِخْوَانِنَا*`.trim(), contextInfo: context(m.sender, getImg(bot)) }, { quoted: global.reply_status || m });
 }
 
 handler.command = ['المهام'];
