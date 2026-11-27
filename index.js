@@ -110,6 +110,45 @@ const isGroupAdminMsg = async (m) => {
     return [m.sender, k.participant, k.participantAlt].some(j => j && e.ids.has(numOf(j)));
   } catch (err) { console.error('[ERIN-ERR] adminCheck', err?.message); return false; }
 };
+const ownerIdCache = new Map();
+const ownerIdsIn = async (chat) => {
+  let e = ownerIdCache.get(chat);
+  if (e && Date.now() - e.t < 60000) return e.ids;
+  const ids = new Set([...OWNER_NUMS, ...OWNER_LIDS]);
+  try {
+    const md = await sock.groupMetadata(chat);
+    for (const p of md.participants || []) {
+      const all = [p.id, p.lid, p.jid, p.phoneNumber].filter(Boolean).map(numOf);
+      if (all.some(x => OWNER_NUMS.has(x) || OWNER_LIDS.has(x))) all.forEach(x => ids.add(x));
+    }
+  } catch (err) { console.error('[ERIN-ERR] ownerIds', err?.message); }
+  ownerIdCache.set(chat, { t: Date.now(), ids });
+  return ids;
+};
+const PROTECTED_CMDS = new Set(['طرد','خفض','حذف','كتم','انذار','تحذير','warn','حذفانذار','حذفالانذار','ضيف']);
+const protectHook = async (m) => {
+  try {
+    const t = (m.text || m.body || '').trim();
+    const mm = t.match(/^[./!]?\s*([^\s]+)/);
+    if (!mm) return false;
+    const c = mm[1].replace(/[^\p{L}]/gu, '');
+    const cn = c.toLowerCase();
+    if (!PROTECTED_CMDS.has(c) && !PROTECTED_CMDS.has(cn)) return false;
+    if (isOwnerMsg(m)) return false;
+    const chat = m.chat || (m.key && m.key.remoteJid) || '';
+    if (!chat.endsWith('@g.us')) return false;
+    const ids = await ownerIdsIn(chat);
+    const targets = [m.quoted?.sender, m.quoted?.participant, ...(m.mentionedJid || []), ...(m.msg?.contextInfo?.mentionedJid || [])].filter(Boolean);
+    const rest = t.replace(/^[./!]?\s*[^\s]+/, '').replace(/[^0-9]/g, '');
+    if (rest.length >= 8) targets.push(rest);
+    if (targets.some(j => ids.has(numOf(j)) || ids.has(rest))) {
+      console.log('[ERIN-PROTECT] blocked', c, 'from', m.sender);
+      try { await m.reply('*🛡️ مينفعش، ده المطور*'); } catch {}
+      return true;
+    }
+  } catch (e) { console.error('[ERIN-ERR] protectHook', e?.message); }
+  return false;
+};
 const powerHook = async (m) => {
   try {
     const t = (m.text || m.body || '').trim();
@@ -142,6 +181,7 @@ const powerTimer = setInterval(() => {
   if (!cs || !Array.isArray(cs.beforeHandlers)) return;
   clearInterval(powerTimer);
   cs.beforeHandlers.unshift(powerHook);
+  cs.beforeHandlers.unshift(async (m) => (globalThis.erinOff ? false : protectHook(m)));
   console.log('[ERIN-POWER] hook installed, off =', globalThis.erinOff);
 }, 1000);
 
