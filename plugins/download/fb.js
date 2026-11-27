@@ -1,6 +1,7 @@
 import axios from 'axios';
 import qs from 'qs';
 import cheerio from 'cheerio';
+import { sendMedia } from '../../system/ytdl.js';
 
 const handler = async (m, { conn, text, usedPrefix, command }) => {
   if (!text) throw `*❲ ❤️ ❳ ~ ضع رابط الفيديو بعد الأمر ~ ❲ 💙 ❳ *\n\nمثال:\n/${command} https://www.facebook.com/reel/xxxxxx`;
@@ -8,6 +9,7 @@ const handler = async (m, { conn, text, usedPrefix, command }) => {
   m.react('🌾');
 
   try {
+    try { await sendMedia(conn, m.chat, m, text.trim(), 'video'); m.react('✅'); return; } catch (e0) { console.error('[ERIN-ERR] fb yt-dlp', e0?.message); }
     const tokenRes = await userVerify(text);
     const htmlRes = await ajaxSearch(text, tokenRes.k_token, tokenRes.k_exp, tokenRes.token);
     const $ = cheerio.load(htmlRes.data);

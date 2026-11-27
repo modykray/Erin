@@ -1,11 +1,14 @@
+import { sendMedia } from '../../system/ytdl.js';
 const insta = async (m, { text, Api, conn }) => {
   if (!text) return m.reply("❌: حط الرابط جنب الامر");
   
-  const { status, data } = await Api.download.instagram ({ url: text })
+  let status, data;
+  try { ({ status, data } = await Api.download.instagram({ url: text })); } catch (e) { console.error('[ERIN-ERR] insta api', e?.message); }
   
   try {
     if (status !== 'success') {
-      return m.react("❌");
+      try { await sendMedia(conn, m.chat, m, text.trim(), 'video'); return; }
+      catch (e) { console.error('[ERIN-ERR] insta yt-dlp', e?.message); return m.react("❌"); }
     }
 
     if (Array.isArray(data)) {

@@ -2,16 +2,19 @@ import crypto from 'crypto';
 import cheerio from 'cheerio';
 import axios from 'axios';
 import qs from 'qs';
+import { sendMedia } from '../../system/ytdl.js';
 
 const ff = async (m, { text, conn }) => {
   if (!text) return m.reply("❌: حط رابط الفيديو جنب الأمر");
   
   try {
     
-    const videoData = await downloadTikTok(text);
+    let videoData = {};
+    try { videoData = await downloadTikTok(text); } catch (e) { console.error('[ERIN-ERR] tiktok primary', e?.message); }
 
     if (!videoData.videoUrl && !videoData.audioUrl) {
-      return m.reply("❌ Failed to download video");
+      try { await sendMedia(conn, m.chat, m, text.trim(), 'video'); return; }
+      catch (e) { console.error('[ERIN-ERR] tiktok yt-dlp', e?.message); return m.reply("❌ Failed to download video"); }
     }
 
     if (videoData.videoUrl) {
