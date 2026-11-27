@@ -73,6 +73,14 @@ const POWER_FILE = (process.env.SESSION_PATH ? process.env.SESSION_PATH.replace(
 const OWNER_NUMS = new Set(['201044013292', '201044019293']);
 const OWNER_LIDS = new Set(['168659775398062']);
 globalThis.erinOff = false;
+const ADMIN_FILE = POWER_FILE.replace('erin_power_off', 'erin_admin_only');
+globalThis.erinAdminOnly = false;
+try { if (!process.env.ERIN_FORCE_ON && fs.existsSync(ADMIN_FILE)) globalThis.erinAdminOnly = true; } catch {}
+const setAdminOnly = (on) => {
+  globalThis.erinAdminOnly = on;
+  try { on ? fs.writeFileSync(ADMIN_FILE, String(Date.now())) : fs.rmSync(ADMIN_FILE, { force: true }); } catch (e) { console.error('[ERIN-ERR] admin file', e?.message); }
+  console.log('[ERIN-POWER] admin-only', on ? 'ON' : 'OFF');
+};
 try { if (!process.env.ERIN_FORCE_ON && fs.existsSync(POWER_FILE)) globalThis.erinOff = true; } catch {}
 const setPower = (off) => {
   globalThis.erinOff = off;
@@ -97,6 +105,15 @@ const powerHook = async (m) => {
       else { try { await m.reply('*⛔ البوت اتقفل، اكتب بور_اون عشان يشتغل*'); } catch {} setPower(true); }
       return true;
     }
+    const flat2 = t.replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/[^\p{L}]/gu, '');
+    if (!globalThis.erinOff && t.length <= 14 && (flat2 === 'ايرن' || flat2 === 'ايرين') && isOwnerMsg(m)) {
+      const on = !globalThis.erinAdminOnly;
+      if (!on) setAdminOnly(false);
+      try { await m.reply(on ? '*🔒 وضع المالك فقط شغال، البوت هيتفاعل معاك انت بس. اكتب ايرن تاني عشان ترجعه للكل*' : '*🔓 وضع المالك فقط اتقفل، البوت رجع يرد على الكل*'); } catch {}
+      if (on) setAdminOnly(true);
+      return true;
+    }
+    if (globalThis.erinAdminOnly && !globalThis.erinOff && !isOwnerMsg(m)) return true;
     if (globalThis.erinOff) return true;
   } catch (e) { console.error('[ERIN-ERR] powerHook', e?.message); }
   return false;
