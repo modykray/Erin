@@ -125,6 +125,7 @@ const ownerIdsIn = async (chat) => {
   ownerIdCache.set(chat, { t: Date.now(), ids });
   return ids;
 };
+globalThis.erinOwnerIdsIn = ownerIdsIn;
 const PROTECTED_CMDS = new Set(['طرد','خفض','حذف','كتم','انذار','تحذير','warn','حذفانذار','حذفالانذار','ضيف']);
 const OWNER_ONLY_CMDS = new Set([]);
 const protectHook = async (m) => {
@@ -190,6 +191,54 @@ const powerTimer = setInterval(() => {
   cs.beforeHandlers.unshift(async (m) => (globalThis.erinOff ? false : protectHook(m)));
   console.log('[ERIN-POWER] hook installed, off =', globalThis.erinOff);
 }, 1000);
+
+
+/* ===== Darwin welcome / goodbye on group join/leave ===== */
+import { DARWIN_SYSTEM, writeText as dWrite, speak as dSpeak, takeVoiceSlot as dSlot, refundVoiceSlot as dRefund } from './lib/darwin.js';
+const greetLast = new Map();
+const GREET_SYS = {
+  add: DARWIN_SYSTEM + " A new member just joined the group. Welcome them warmly and briefly. Do not say any name or number.",
+  remove: DARWIN_SYSTEM + " A member just left the group. Say a short, kind, funny goodbye. Do not say any name or number."
+};
+const greetTimer = setInterval(() => {
+  const sock = client.sock;
+  if (!sock || sock.__erinGreet || !sock.ev) return;
+  sock.__erinGreet = true;
+  sock.ev.on('group-participants.update', async (ev) => {
+    try {
+      if (globalThis.erinOff) return;
+      if (ev.action !== 'add' && ev.action !== 'remove') return;
+      const chat = ev.id;
+      const me = [sock.user?.id, sock.user?.lid].filter(Boolean).map(numOf);
+      const people = (ev.participants || []).map(p => typeof p === 'string' ? { id: p } : p)
+        .filter(p => !me.includes(numOf(p.id)) && !me.includes(numOf(p.phoneNumber)));
+      if (!people.length) return;
+      const now = Date.now();
+      const prev = greetLast.get(chat) || { t: 0, v: 0 };
+      if (now - prev.t < 15000) return;
+      const voiceOk = now - prev.v > 60000 && !!process.env.FISH_API_KEY && dSlot();
+      greetLast.set(chat, { t: now, v: voiceOk ? now : prev.v });
+      const first = people[0];
+      const tagNum = numOf(first.phoneNumber || first.id);
+      const mentions = people.map(p => p.id);
+      const tag = people.length > 1 ? `@${tagNum} وباقي الشلة` : `@${tagNum}`;
+      const text = (await dWrite(GREET_SYS[ev.action], ev.action === 'add' ? 'رحب بعضو جديد' : 'ودع عضو غادر', '')).slice(0, 300);
+      if (!text) { if (voiceOk) dRefund(); return; }
+      const head = ev.action === 'add' ? '👋 نورت' : '👋 مع السلامة';
+      if (voiceOk) {
+        try {
+          const audio = await dSpeak(text);
+          await sock.sendMessage(chat, { text: `${head} ${tag}`, mentions });
+          await sock.sendMessage(chat, { audio, mimetype: 'audio/ogg; codecs=opus', ptt: true });
+          return;
+        } catch (e) { console.log('[DARWIN-GREET] voice failed:', e?.message); dRefund(); }
+      }
+      await sock.sendMessage(chat, { text: `${head} ${tag}\n🐟 ${text}`, mentions });
+    } catch (e) { console.error('[ERIN-ERR] greet', e?.message); }
+  });
+  clearInterval(greetTimer);
+  console.log('[DARWIN-GREET] listener installed');
+}, 2000);
 
 /* one-shot direct send test (only when DIRECT_TEST_TO is set) */
 let directDone = false;
