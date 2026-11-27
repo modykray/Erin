@@ -10,8 +10,8 @@ const client = new Client({
   prefix: [".", "/", "!"],
   fromMe: false, 
   owners: [
-    { name: "Erin", jid: "201044013292@s.whatsapp.net", lid: "" },
-    { name: "Erin2", jid: "201044019293@s.whatsapp.net", lid: "" }
+    { name: "إيرن / مودي", jid: "201044013292@s.whatsapp.net", lid: "" },
+    { name: "إيرن / مودي", jid: "201044019293@s.whatsapp.net", lid: "" }
   ],
   settings: { noWelcome: false },
   commandsPath: './plugins'
@@ -37,8 +37,8 @@ config.info = {
     channel: "https://github.com/modykray/Erin"
   },
   copyright: { 
-    pack: 'Erin', 
-    author: 'Erin'
+    pack: 'إيرن / مودي', 
+    author: 'إيرن / مودي'
   },
   images: [
     "https://i.pinimg.com/originals/11/26/97/11269786cdb625c60213212aa66273a9.png",

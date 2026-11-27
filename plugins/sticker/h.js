@@ -9,7 +9,7 @@ const test = async (m, { conn, args }) => {
     return m.reply("📝 *الاستخدام الصحيح:*\n\n.حقوق اسم الباك | اسم المؤلف\n\n*مثال:*\n`.حقوق venom | 2010`");
   }
   
-  if (!pack) pack = "Erin";
+  if (!pack) pack = "إيرن / مودي";
   if (author === undefined) author = null;
   
   const q = await m.quoted;

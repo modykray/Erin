@@ -34,7 +34,7 @@ const handler = async (m, { conn, text }) => {
     await conn.sendButton(m.chat, {
       imageUrl: img,
       bodyText: msg,
-      footerText: "Erin",
+      footerText: "إيرن / مودي",
       buttons: [
         {
           name: "cta_copy",

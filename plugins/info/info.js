@@ -53,7 +53,7 @@ const handler = async (m, { conn, bot, config }) => {
 
 ——> *الـمـالـكـيـن 👑*
 - *العدد:* \`${bot.owners?.length || 0}\`
-- *الرئيسي:* \`${bot.owners?.[0]?.name || 'إيرن ييغر'} (${bot.owners?.[0]?.jid?.split('@')[0] || 'لا يوجد'})\`
+- *الرئيسي:* \`${bot.owners?.[0]?.name || 'إيرن / مودي'} (${bot.owners?.[0]?.jid?.split('@')[0] || 'لا يوجد'})\`
 
 > *_إيرن ييغر BOT SYSTEM_*`;
 

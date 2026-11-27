@@ -1,13 +1,16 @@
 {
-  "name": "Pomni AI",
+  "name": "erin-bot",
   "version": "2.0.0",
-  "description": "Simple WhatsApp bot, Modified by VENi - youssefv",
+  "description": "WhatsApp bot by Erin (based on Pomni-AI by deveni0)",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "start": "node index.js"
   },
-  "keywords": ["whatsapp-bot", "pomni-ai"],
+  "keywords": [
+    "whatsapp-bot",
+    "pomni-ai"
+  ],
   "author": "VENi - youssefv",
   "license": "MIT",
   "dependencies": {

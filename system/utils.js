@@ -17,7 +17,7 @@ if (!fs.existsSync(tmp)) fs.mkdirSync(tmp, { recursive: true });
 
 const createSticker = async (buffer, options = {}) => {
   const sticker = new Sticker(buffer, {
-    pack: options.pack || 'Erin',
+    pack: options.pack || 'إيرن / مودي',
     author: options.author || 'Erin',
     type: "full",
     quality: options.mime === "image/jpg" ? 100 : 10
