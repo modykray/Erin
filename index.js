@@ -4,7 +4,7 @@ import UltraDB from "./system/UltraDB.js";
 import sub from './sub.js';
 
 /* Channel jid: starts from the old id, then resolved from the invite link once connected */
-globalThis.CH_JID = '120363225356834044@newsletter';
+globalThis.CH_JID = '120363434971453417@newsletter';
 const CH_INVITE = '0029Vb8xDV8A2pLCoK6KtH36';
 
 /* =========== Client ========== */
@@ -128,9 +128,7 @@ const wrapTimer = setInterval(() => {
         try {
           const ci = rest[0].contextInfo;
           if (ci) {
-            delete ci.forwardedNewsletterMessageInfo;
-            delete ci.isForwarded;
-            delete ci.forwardingScore;
+            if (ci.forwardedNewsletterMessageInfo) { ci.forwardedNewsletterMessageInfo.newsletterJid = globalThis.CH_JID; ci.forwardedNewsletterMessageInfo.newsletterName = 'إيرن ييغر'; }
           }
         } catch (e) { console.error('[ERIN-ERR] sanitize', e?.message); }
       }
