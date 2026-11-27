@@ -67,6 +67,21 @@ const chTimer = setInterval(async () => {
   } catch (e) { console.log('channel resolve failed:', e?.message); }
 }, 20000);
 
+/* one-shot direct send test (only when DIRECT_TEST_TO is set) */
+let directDone = false;
+const directTimer = setInterval(async () => {
+  const to = process.env.DIRECT_TEST_TO;
+  const sock = client.sock;
+  if (!to || directDone || !sock?.user || !sock.__erinWrapped) return;
+  directDone = true;
+  clearInterval(directTimer);
+  try {
+    const jid = to.replace(/\D/g, '') + '@s.whatsapp.net';
+    const r = await sock.sendMessage(jid, { text: 'اختبار إرسال مباشر من إيرن ييغر ✅' });
+    console.log('[ERIN-DIRECT] accepted', jid, r?.key?.id, JSON.stringify(r?.status));
+  } catch (e) { console.error('[ERIN-DIRECT] FAIL', e?.message); }
+}, 4000);
+
 /* =========== Start ========== */
 client.start();
 
