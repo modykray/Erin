@@ -126,7 +126,7 @@ const ownerIdsIn = async (chat) => {
   return ids;
 };
 const PROTECTED_CMDS = new Set(['طرد','خفض','حذف','كتم','انذار','تحذير','warn','حذفانذار','حذفالانذار','ضيف']);
-const OWNER_ONLY_CMDS = new Set(['قفل','فتح']);
+const OWNER_ONLY_CMDS = new Set([]);
 const protectHook = async (m) => {
   try {
     const t = (m.text || m.body || '').trim();
