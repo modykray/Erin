@@ -18,7 +18,8 @@ const client = new Client({
     { name: "إيرن / مودي", jid: "201044019293@s.whatsapp.net", lid: "" }
   ],
   settings: { noWelcome: false },
-  commandsPath: './plugins'
+  commandsPath: './plugins',
+  onError: (e) => console.error('[ERIN-ERR]', e && (e.stack || e.message || e))
 });
 
 client.onGroupEvent(group);
@@ -68,6 +69,22 @@ const chTimer = setInterval(async () => {
 
 /* =========== Start ========== */
 client.start();
+
+/* debug: log every outgoing send result */
+const dbgTimer = setInterval(() => {
+  const sock = client.sock;
+  if (!sock || sock.__dbg || typeof sock.sendMessage !== 'function') return;
+  sock.__dbg = true;
+  const orig = sock.sendMessage.bind(sock);
+  sock.sendMessage = async (jid, content, opts) => {
+    try {
+      const r = await orig(jid, content, opts);
+      console.log('[ERIN-SEND] ok', jid, r?.key?.id, r?.status);
+      return r;
+    } catch (e) { console.error('[ERIN-SEND] FAIL', jid, e?.message); throw e; }
+  };
+}, 3000);
+
 
 setTimeout(async () => {
 if (client.commandSystem) { 
