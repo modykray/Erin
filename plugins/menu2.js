@@ -31,7 +31,7 @@ const context = (jid, img) => ({
     isForwarded: true,
     forwardingScore: 1,
     forwardedNewsletterMessageInfo: {
-        newsletterJid: '120363225356834044@newsletter',
+        newsletterJid: globalThis.CH_JID,
         newsletterName: 'إيرن ييغر',
         serverMessageId: 0
     },
@@ -90,7 +90,7 @@ const uptimeFormatted = `${String(hours).padStart(2, '0')}:${String(minutes).pad
             mentions: [m.sender],
             newsletter: {
                 name: 'إيرن ييغر',
-                jid: '120363225356834044@newsletter'
+                jid: globalThis.CH_JID
             }
         }, global.reply_status);
         return;

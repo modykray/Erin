@@ -45,7 +45,7 @@ const handler = async (m, { conn, command, text }) => {
                 isForwarded: true,
                 forwardingScore: 1,
                 forwardedNewsletterMessageInfo: {
-                    newsletterJid: '120363225356834044@newsletter',
+                    newsletterJid: globalThis.CH_JID,
                     newsletterName: 'إيرن ييغر',
                     serverMessageId: 0
                 },
@@ -90,7 +90,7 @@ const handler = async (m, { conn, command, text }) => {
                 isForwarded: true,
                 forwardingScore: 1,
                 forwardedNewsletterMessageInfo: {
-                    newsletterJid: '120363225356834044@newsletter',
+                    newsletterJid: globalThis.CH_JID,
                     newsletterName: 'إيرن ييغر',
                     serverMessageId: 0
                 },

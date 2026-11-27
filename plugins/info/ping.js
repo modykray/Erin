@@ -10,7 +10,7 @@ const handler = async (m, { conn }) => {
     body: "𝐓𝐞𝐬𝐭𝐢𝐧𝐠 𝐭𝐡𝐞 𝐛𝐨𝐭'𝐬 𝐬𝐩𝐞𝐞𝐝: 𝐈𝐬 𝐢𝐭 𝐟𝐚𝐬𝐭 𝐨𝐫 𝐧𝐨𝐭?",
     newsletter: {
       name: 'إيرن ييغر',
-      jid: '120363225356834044@newsletter'
+      jid: globalThis.CH_JID
     },
     big: false
   }, global.reply_status);

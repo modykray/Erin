@@ -40,7 +40,7 @@ await conn.sendButton(m.chat, {
   mentions: [m.sender],
   newsletter: {
       name: 'إيرن ييغر',
-      jid: '120363225356834044@newsletter'
+      jid: globalThis.CH_JID
     },
   interactiveConfig: {
     buttons_limits: 1, // لازم تبقي واحد

@@ -21,7 +21,7 @@ END:VCARD`;
       externalAdReply: {
         title: '𝑇𝛨𝛯 𝛩𝑊𝛮𝛯𝑅',
         body: watermark,
-        sourceUrl: 'https://github.com/modykray/Erin',
+        sourceUrl: 'https://whatsapp.com/channel/0029Vb8xDV8A2pLCoK6KtH36',
         thumbnailUrl: img,
         mediaType: 1,
         showAdAttribution: true,

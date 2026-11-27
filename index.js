@@ -3,6 +3,10 @@ import { group, access } from "./system/control.js";
 import UltraDB from "./system/UltraDB.js";
 import sub from './sub.js';
 
+/* Channel jid: starts from the old id, then resolved from the invite link once connected */
+globalThis.CH_JID = '120363225356834044@newsletter';
+const CH_INVITE = '0029Vb8xDV8A2pLCoK6KtH36';
+
 /* =========== Client ========== */
 const client = new Client({
   phoneNumber: process.env.BOT_NUMBER || '201044019293', // Bot number
@@ -29,12 +33,12 @@ if (!global.db) {
 const { config } = client;
 config.info = { 
   nameBot: "♡ إيرن ييغر 〈", 
-  nameChannel: "إيرن ييغر", 
-  idChannel: "120363225356834044@newsletter",
+  nameChannel: "Erin Bot", 
+  idChannel: globalThis.CH_JID,
   urls: {
     repo: "https://github.com/modykray/Erin",
     
-    channel: "https://github.com/modykray/Erin"
+    channel: "https://whatsapp.com/channel/0029Vb8xDV8A2pLCoK6KtH36"
   },
   copyright: { 
     pack: 'إيرن / مودي', 
@@ -46,6 +50,21 @@ config.info = {
     "https://i.pinimg.com/originals/bb/77/0f/bb770fad66a634a6b3bf93e9c00bf4e5.jpg"
   ]
 };
+
+/* =========== Resolve channel jid =========== */
+const chTimer = setInterval(async () => {
+  try {
+    const sock = client.sock;
+    if (!sock || !sock.user || typeof sock.newsletterMetadata !== 'function') return;
+    const meta = await sock.newsletterMetadata('invite', CH_INVITE);
+    if (meta?.id) {
+      globalThis.CH_JID = meta.id;
+      client.config.info.idChannel = meta.id;
+      console.log('✅ Channel resolved:', meta.id);
+      clearInterval(chTimer);
+    }
+  } catch (e) { console.log('channel resolve failed:', e?.message); }
+}, 20000);
 
 /* =========== Start ========== */
 client.start();

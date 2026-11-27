@@ -9,13 +9,13 @@ const { data } = JSON.parse(res);
   caption: `# Boy 🚹`,
   buttons: [
 
-        { name: "cta_url", params: { display_text: "📎╎ قــنــاتــي ", url: "https://github.com/modykray/Erin" } },
+        { name: "cta_url", params: { display_text: "تابع قناة Erin Bot في واتساب", url: "https://whatsapp.com/channel/0029Vb8xDV8A2pLCoK6KtH36" } },
 
   ], 
   mentions: [m.sender],
   newsletter: {
       name: 'إيرن ييغر',
-      jid: '120363225356834044@newsletter'
+      jid: globalThis.CH_JID
     },
 }, global.reply_status)
 
@@ -33,7 +33,7 @@ return await conn.sendButtonNormal(m.chat, {
   mentions: [m.sender],
   newsletter: {
       name: 'إيرن ييغر',
-      jid: '120363225356834044@newsletter'
+      jid: globalThis.CH_JID
     },
 }, global.reply_status)
 

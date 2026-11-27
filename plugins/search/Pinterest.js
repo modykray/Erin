@@ -33,7 +33,7 @@ async function test(m, { conn, bot, text }) {
       mentions: [m.sender],
       newsletter: {
       name: 'إيرن ييغر',
-      jid: '120363225356834044@newsletter'
+      jid: globalThis.CH_JID
     },
     }, reply_status);
     
