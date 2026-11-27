@@ -184,12 +184,50 @@ const powerHook = async (m) => {
   } catch (e) { console.error('[ERIN-ERR] powerHook', e?.message); }
   return false;
 };
+
+/* ===== anti-profanity (سب) ===== */
+const SWEAR_FILE = (process.env.SESSION_PATH ? process.env.SESSION_PATH.replace(/\/[^/]*$/, '') : '.') + '/erin_swear.json';
+let swearGroups = {};
+try { swearGroups = JSON.parse(fs.readFileSync(SWEAR_FILE, 'utf8')); } catch {}
+const saveSwear = () => { try { fs.writeFileSync(SWEAR_FILE, JSON.stringify(swearGroups)); } catch (e) { console.error('[ERIN-ERR] swear save', e?.message); } };
+const normAr = (x) => (x || '').normalize('NFKC').replace(/[\u064B-\u065F\u0670\u0640\u06D6-\u06ED]/g, '')
+  .replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/ؤ/g, 'و').replace(/ئ/g, 'ي').replace(/ک/g, 'ك').replace(/ی/g, 'ي')
+  .toLowerCase().replace(/(.)\1+/gu, '$1');
+const SWEAR_WORDS = new Set('كس بز طيز زب تيز تيظك تيظ تيزك كسمك علق خول متناك متناكه شرموطه'.split(' ').map(normAr));
+const hasSwear = (text) => {
+  const toks = normAr(text).split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  return toks.some(t => SWEAR_WORDS.has(t) || (t.length > 2 && t[0] === 'و' && SWEAR_WORDS.has(t.slice(1))));
+};
+globalThis.erinSwear = {
+  isOn: (chat) => !!swearGroups[chat],
+  set: (chat, on) => { if (on) swearGroups[chat] = 1; else delete swearGroups[chat]; saveSwear(); },
+  isGroupAdmin: isGroupAdminMsg,
+  botIsAdmin: async (chat) => {
+    const md = await client.sock.groupMetadata(chat);
+    const me = [client.sock.user?.id, client.sock.user?.lid].filter(Boolean).map(numOf);
+    return (md.participants || []).some(p => p.admin && [p.id, p.lid, p.jid, p.phoneNumber].filter(Boolean).map(numOf).some(x => me.includes(x)));
+  },
+};
+const swearHook = async (m) => {
+  try {
+    if (globalThis.erinOff) return false;
+    const chat = m.chat || (m.key && m.key.remoteJid) || '';
+    if (!chat.endsWith('@g.us') || !swearGroups[chat] || m.key?.fromMe) return false;
+    const t = m.text || m.body || '';
+    if (!t || !hasSwear(t)) return false;
+    if (isOwnerMsg(m) || await isGroupAdminMsg(m)) return false;
+    await client.sock.sendMessage(chat, { delete: m.key });
+    console.log('[ERIN-SWEAR] deleted msg in', chat);
+    return true;
+  } catch (e) { console.error('[ERIN-ERR] swearHook', e?.message); return false; }
+};
 const powerTimer = setInterval(() => {
   const cs = client.commandSystem;
   if (!cs || !Array.isArray(cs.beforeHandlers)) return;
   clearInterval(powerTimer);
   cs.beforeHandlers.unshift(powerHook);
   cs.beforeHandlers.push(stickerHook);
+  cs.beforeHandlers.push(swearHook);
   cs.beforeHandlers.unshift(async (m) => (globalThis.erinOff ? false : protectHook(m)));
   console.log('[ERIN-POWER] hook installed, off =', globalThis.erinOff);
 }, 1000);
