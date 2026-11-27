@@ -101,6 +101,8 @@ const wrapTimer = setInterval(() => {
     });
   } catch (e) { console.error('[ERIN-LID] listener failed:', e?.message); }
   const resolve = async (jid) => {
+    return jid; // reply to the exact chat the message came from (no lid->pn rewrite)
+    // eslint-disable-next-line no-unreachable
     if (typeof jid !== 'string' || !jid.endsWith('@lid')) return jid;
     let pn = lidToPn.get(jid);
     if (!pn) {
