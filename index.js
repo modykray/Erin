@@ -126,6 +126,7 @@ const ownerIdsIn = async (chat) => {
   return ids;
 };
 const PROTECTED_CMDS = new Set(['طرد','خفض','حذف','كتم','انذار','تحذير','warn','حذفانذار','حذفالانذار','ضيف']);
+const OWNER_ONLY_CMDS = new Set(['قفل','فتح']);
 const protectHook = async (m) => {
   try {
     const t = (m.text || m.body || '').trim();
@@ -133,9 +134,14 @@ const protectHook = async (m) => {
     if (!mm) return false;
     const c = mm[1].replace(/[^\p{L}]/gu, '');
     const cn = c.toLowerCase();
+    const chat = m.chat || (m.key && m.key.remoteJid) || '';
+    if (OWNER_ONLY_CMDS.has(c) && chat.endsWith('@g.us') && t.length <= 20 && !isOwnerMsg(m)) {
+      console.log('[ERIN-PROTECT] owner-only', c, 'from', m.sender);
+      try { await m.reply('*🔒 الأمر ده للمطور بس*'); } catch {}
+      return true;
+    }
     if (!PROTECTED_CMDS.has(c) && !PROTECTED_CMDS.has(cn)) return false;
     if (isOwnerMsg(m)) return false;
-    const chat = m.chat || (m.key && m.key.remoteJid) || '';
     if (!chat.endsWith('@g.us')) return false;
     const ids = await ownerIdsIn(chat);
     const targets = [m.quoted?.sender, m.quoted?.participant, ...(m.mentionedJid || []), ...(m.msg?.contextInfo?.mentionedJid || [])].filter(Boolean);
