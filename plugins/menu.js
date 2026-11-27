@@ -39,7 +39,7 @@ const getImg = (bot) => {
 
 import fs from 'fs';
 let THUMB = null;
-try { THUMB = fs.readFileSync(new URL('../assets/menu.jpg', import.meta.url)); } catch (e) { console.error('[ERIN-MENU] thumb load failed:', e?.message); }
+try { THUMB = fs.readFileSync(new URL('../assets/menu_full.jpg', import.meta.url)); } catch (e) { console.error('[ERIN-MENU] thumb load failed:', e?.message); }
 
 const context = () => ({
     externalAdReply: {
@@ -73,13 +73,7 @@ ${CATEGORIES.map(c => `┃ ⌯︙${c[0]} ~ *قـسـم ${c[1]} ${c[3]}*`).join('
 ╰─┈─┈─┈─⟞🎪⟝─┈─┈─┈─╯
 > *رد عـلـي الـرسـالـه بـ رقـم الـقـسـم فـقـط بـدون نـقـطـه*`;
 
-    let msg;
-    try { msg = await conn.sendMessage(m.chat, { text: txt }, { quoted: global.reply_status }); }
-    catch (e) { console.error('[ERIN-MENU] plain send failed:', e?.message); msg = await conn.sendMessage(m.chat, { text: txt }); }
-    console.log('[ERIN-MENU] plain sent', msg?.key?.id);
-    if (msg?.key?.id) global.menus[msg.key.id] = { cats, chatId: m.chat, time: Date.now() };
-    try { msg = await conn.sendMessage(m.chat, { text: txt, contextInfo: context() }, { quoted: global.reply_status }); }
-    catch (e) { console.error('[ERIN-MENU] card send failed:', e?.message); }
+    const msg = await sendBoth(conn, m.chat, txt, 'menu');
     console.log('[ERIN-MENU] sent', msg?.key?.id);
   
     global.menus[msg.key.id] = { cats, chatId: m.chat, time: Date.now() };
@@ -87,10 +81,12 @@ ${CATEGORIES.map(c => `┃ ⌯︙${c[0]} ~ *قـسـم ${c[1]} ${c[3]}*`).join('
 
 const sendBoth = async (conn, chat, text, tag) => {
     let r;
+    if (THUMB && text.length < 1800) {
+        try { r = await conn.sendMessage(chat, { image: THUMB, caption: text }, { quoted: global.reply_status }); console.log('[ERIN-SEC] image', tag, chat, r?.key?.id); return r; }
+        catch (e) { console.error('[ERIN-ERR] image', tag, e?.message); }
+    }
     try { r = await conn.sendMessage(chat, { text }, { quoted: global.reply_status }); console.log('[ERIN-SEC] plain', tag, chat, r?.key?.id); }
     catch (e) { console.error('[ERIN-ERR] plain', tag, e?.message); try { r = await conn.sendMessage(chat, { text }); } catch (e2) { console.error('[ERIN-ERR] plain2', tag, e2?.message); } }
-    try { const c = await conn.sendMessage(chat, { text, contextInfo: context() }, { quoted: global.reply_status }); console.log('[ERIN-SEC] card', tag, chat, c?.key?.id); }
-    catch (e) { console.error('[ERIN-ERR] card', tag, e?.message); }
     return r;
 };
 
