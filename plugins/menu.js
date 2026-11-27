@@ -37,7 +37,11 @@ const getImg = (bot) => {
     return Array.isArray(images) ? images[Math.floor(Math.random() * images.length)] : images;
 };
 
-const context = (jid, img) => ({
+import fs from 'fs';
+let THUMB = null;
+try { THUMB = fs.readFileSync(new URL('../assets/menu.jpg', import.meta.url)); } catch (e) { console.error('[ERIN-MENU] thumb load failed:', e?.message); }
+
+const context = (jid) => ({
     mentionedJid: [jid],
     isForwarded: true,
     forwardingScore: 1,
@@ -47,10 +51,10 @@ const context = (jid, img) => ({
         serverMessageId: 0
     },
     externalAdReply: {
-        title: "𝐏𝐎𝐌𝐍𝐈-𝐀𝐈 🎪 | 𝐁𝐨𝐭 𝐢𝐬 𝐛𝐮𝐢𝐥𝐭 𝐨𝐧 𝐭𝐡𝐞 𝐖𝐒/𝐕𝐈𝐈 𝐟𝐫𝐚𝐦𝐞𝐰𝐨𝐫𝐤",
-        body: "𝚆𝚑𝚊𝚝𝚜𝙰𝚙𝚙 𝚋𝚘𝚝 𝚝𝚑𝚊𝚝 𝚒𝚜 𝚎𝚊𝚜𝚢 𝚝𝚘 𝚖𝚘𝚍𝚒𝚏𝚢 𝚊𝚗𝚍 𝚟𝚎𝚛𝚢 𝚏𝚊𝚜𝚝",
-        thumbnailUrl: img,
-        sourceUrl: '',
+        title: "إيرن ييغر 🎪 | Erin Bot",
+        body: "بوت واتساب سريع وسهل التعديل",
+        ...(THUMB ? { thumbnail: THUMB } : {}),
+        sourceUrl: 'https://whatsapp.com/channel/0029Vb8xDV8A2pLCoK6KtH36',
         mediaType: 1,
         renderLargerThumbnail: true
     }
@@ -77,10 +81,12 @@ ${CATEGORIES.map(c => `┃ ⌯︙${c[0]} ~ *قـسـم ${c[1]} ${c[3]}*`).join('
 ╰─┈─┈─┈─⟞🎪⟝─┈─┈─┈─╯
 > *رد عـلـي الـرسـالـه بـ رقـم الـقـسـم فـقـط بـدون نـقـطـه*`;
 
-    const msg = await conn.sendMessage(m.chat, { 
+    let msg;
+    try { msg = await conn.sendMessage(m.chat, { 
         text: txt,
-        contextInfo: context(m.sender, getImg(bot))
-    }, { quoted: reply_status });
+        contextInfo: context(m.sender)
+    }, { quoted: global.reply_status }); } catch (e) { console.error('[ERIN-MENU] send failed:', e?.message); msg = await conn.sendMessage(m.chat, { text: txt }); }
+    console.log('[ERIN-MENU] sent', msg?.key?.id);
   
     global.menus[msg.key.id] = { cats, chatId: m.chat, time: Date.now() };
 };
@@ -93,13 +99,13 @@ menu.before = async (m, { conn, bot }) => {
     
     const cat = getCat(parseInt(m.text));
     if (!cat) {
-        await conn.sendMessage(m.chat, { text: '*❌≥ اختار رقم من القائمة بس*' }, { quoted: reply_status });
+        await conn.sendMessage(m.chat, { text: '*❌≥ اختار رقم من القائمة بس*' }, { quoted: global.reply_status });
         return true;
     }
     
     const cmds = menuData.cats[cat[2]];
     if (!cmds?.length) {
-        await conn.sendMessage(m.chat, { text: '*❌≥ القسم فاضي*' }, { quoted: reply_status });
+        await conn.sendMessage(m.chat, { text: '*❌≥ القسم فاضي*' }, { quoted: global.reply_status });
         return true;
     }
     
@@ -120,8 +126,8 @@ ${cmdsList}
 ┃ *⌯︙Erin ~ ${bot.config.info.nameBot}*
 ╰─┈─┈─┈─⟞${cat[3]}⟝─┈─┈─┈─╯
 > *رَبَّنَا اغْفِرْ لَنَا وَلِإِخْوَانِنَا*`.trim(),
-        contextInfo: context(m.sender, getImg(bot))
-    }, { quoted: reply_status });
+        contextInfo: context(m.sender)
+    }, { quoted: global.reply_status });
     
     return true;
 };
