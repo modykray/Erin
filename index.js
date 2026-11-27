@@ -188,7 +188,7 @@ const powerTimer = setInterval(() => {
   if (!cs || !Array.isArray(cs.beforeHandlers)) return;
   clearInterval(powerTimer);
   cs.beforeHandlers.unshift(powerHook);
-  cs.beforeHandlers.push(asterHook);
+  cs.beforeHandlers.push(stickerHook);
   cs.beforeHandlers.unshift(async (m) => (globalThis.erinOff ? false : protectHook(m)));
   console.log('[ERIN-POWER] hook installed, off =', globalThis.erinOff);
 }, 1000);
@@ -241,24 +241,30 @@ const greetTimer = setInterval(() => {
   console.log('[DARWIN-GREET] listener installed');
 }, 2000);
 
-/* ===== استر: reply with a sticker when someone says the word ===== */
-let ASTER = null;
-try { ASTER = fs.readFileSync(new URL('./assets/aster.webp', import.meta.url)); } catch (e) { console.error('[ERIN-ERR] aster sticker load', e?.message); }
-const asterLast = new Map();
-const asterHook = async (m) => {
+/* ===== sticker triggers: استر / مش فاهم ===== */
+const loadSticker = (f) => { try { return fs.readFileSync(new URL('./assets/' + f, import.meta.url)); } catch (e) { console.error('[ERIN-ERR] sticker load', f, e?.message); return null; } };
+const SEP = '[\\s!؟?.,،]';
+const STICKERS = [
+  { name: 'aster', buf: loadSticker('aster.webp'), re: new RegExp('(^|' + SEP + ')استر($|' + SEP + ')') },
+  { name: 'mesh-fahem', buf: loadSticker('mesh_fahem.webp'), re: new RegExp('(^|' + SEP + ')مش\\s+فاهم(ه|ين|ك|ني|ها|هم)?($|' + SEP + ')') }
+];
+const stickerLast = new Map();
+const stickerHook = async (m) => {
   try {
-    if (!ASTER || globalThis.erinOff || m.key?.fromMe) return false;
+    if (globalThis.erinOff || m.key?.fromMe) return false;
     const t = (m.text || m.body || '').trim();
     if (!t || t.length > 40) return false;
-    const flat = t.replace(/[\u064B-\u065F\u0670\u0640]/g, '').replace(/[أإآ]/g, 'ا');
-    if (!/(^|[\s!؟?.,،])استر($|[\s!؟?.,،])/.test(flat)) return false;
+    const flat = t.replace(/[\u064B-\u065F\u0670\u0640]/g, '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي');
+    const hit = STICKERS.find(x => x.buf && x.re.test(flat));
+    if (!hit) return false;
     const chat = m.chat || m.key?.remoteJid;
     if (!chat) return false;
+    const k = hit.name + '|' + chat;
     const now = Date.now();
-    if (now - (asterLast.get(chat) || 0) < 20000) return false;
-    asterLast.set(chat, now);
-    await client.sock.sendMessage(chat, { sticker: ASTER }, { quoted: m });
-  } catch (e) { console.error('[ERIN-ERR] aster', e?.message); }
+    if (now - (stickerLast.get(k) || 0) < 20000) return false;
+    stickerLast.set(k, now);
+    await client.sock.sendMessage(chat, { sticker: hit.buf }, { quoted: m });
+  } catch (e) { console.error('[ERIN-ERR] sticker', e?.message); }
   return false;
 };
 
