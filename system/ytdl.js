@@ -69,8 +69,19 @@ export const fetchMedia = async (url, kind) => {
   return { file, title: title || 'media', ext: path.extname(file).slice(1) };
 };
 
+export const ytTitle = async (url) => {
+  const id = (url.match(/(?:v=|youtu\.be\/|shorts\/)([\w-]{11})/) || [])[1];
+  if (!id) throw new Error('no id');
+  const v = await yts({ videoId: id });
+  return v?.title;
+};
+
 export const sendMedia = async (conn, chat, m, url, kind) => {
   const r = await fetchMedia(url, kind);
+  return sendFile(conn, chat, m, r, kind);
+};
+
+export const sendFile = async (conn, chat, m, r, kind) => {
   try {
     const buf = fs.readFileSync(r.file);
     if (kind === 'audio') {
