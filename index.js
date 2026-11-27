@@ -131,9 +131,7 @@ const wrapTimer = setInterval(() => {
             delete ci.forwardedNewsletterMessageInfo;
             delete ci.isForwarded;
             delete ci.forwardingScore;
-            if (Array.isArray(ci.mentionedJid)) ci.mentionedJid = await Promise.all(ci.mentionedJid.map(resolve));
           }
-          if (Array.isArray(rest[0].mentions)) rest[0].mentions = await Promise.all(rest[0].mentions.map(resolve));
         } catch (e) { console.error('[ERIN-ERR] sanitize', e?.message); }
       }
       try {
