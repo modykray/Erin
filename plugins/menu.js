@@ -41,22 +41,14 @@ import fs from 'fs';
 let THUMB = null;
 try { THUMB = fs.readFileSync(new URL('../assets/menu.jpg', import.meta.url)); } catch (e) { console.error('[ERIN-MENU] thumb load failed:', e?.message); }
 
-const context = (jid) => ({
-    mentionedJid: [jid],
-    isForwarded: true,
-    forwardingScore: 1,
-    forwardedNewsletterMessageInfo: {
-        newsletterJid: globalThis.CH_JID,
-        newsletterName: 'إيرن ييغر',
-        serverMessageId: 0
-    },
+const context = () => ({
     externalAdReply: {
         title: "إيرن ييغر 🎪 | Erin Bot",
         body: "بوت واتساب سريع وسهل التعديل",
         ...(THUMB ? { thumbnail: THUMB } : {}),
         sourceUrl: 'https://whatsapp.com/channel/0029Vb8xDV8A2pLCoK6KtH36',
         mediaType: 1,
-        renderLargerThumbnail: true
+        renderLargerThumbnail: false
     }
 });
 
@@ -82,10 +74,12 @@ ${CATEGORIES.map(c => `┃ ⌯︙${c[0]} ~ *قـسـم ${c[1]} ${c[3]}*`).join('
 > *رد عـلـي الـرسـالـه بـ رقـم الـقـسـم فـقـط بـدون نـقـطـه*`;
 
     let msg;
-    try { msg = await conn.sendMessage(m.chat, { 
-        text: txt,
-        contextInfo: context(m.sender)
-    }, { quoted: global.reply_status }); } catch (e) { console.error('[ERIN-MENU] send failed:', e?.message); msg = await conn.sendMessage(m.chat, { text: txt }); }
+    try { msg = await conn.sendMessage(m.chat, { text: txt }, { quoted: global.reply_status }); }
+    catch (e) { console.error('[ERIN-MENU] plain send failed:', e?.message); msg = await conn.sendMessage(m.chat, { text: txt }); }
+    console.log('[ERIN-MENU] plain sent', msg?.key?.id);
+    if (msg?.key?.id) global.menus[msg.key.id] = { cats, chatId: m.chat, time: Date.now() };
+    try { msg = await conn.sendMessage(m.chat, { text: txt, contextInfo: context() }, { quoted: global.reply_status }); }
+    catch (e) { console.error('[ERIN-MENU] card send failed:', e?.message); }
     console.log('[ERIN-MENU] sent', msg?.key?.id);
   
     global.menus[msg.key.id] = { cats, chatId: m.chat, time: Date.now() };
