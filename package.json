@@ -5,7 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "postinstall": "sed -i 's/VkVOSTEyMzQ=/RVJJTjEyMzQ=/g' node_modules/meowsab/dist/index.mjs node_modules/meowsab/dist/index.cjs || true"
   },
   "keywords": [
     "whatsapp-bot",
