@@ -94,6 +94,22 @@ const isOwnerMsg = (m) => {
   return [m.sender, k.participant, k.participantAlt, k.remoteJid, k.remoteJidAlt].some(j => j && (OWNER_NUMS.has(numOf(j)) || OWNER_LIDS.has(numOf(j)))) && !(k.remoteJid || '').endsWith('@g.us') ||
     [m.sender, k.participant, k.participantAlt].some(j => j && (OWNER_NUMS.has(numOf(j)) || OWNER_LIDS.has(numOf(j))));
 };
+const adminCache = new Map();
+const isGroupAdminMsg = async (m) => {
+  try {
+    const chat = m.chat || (m.key && m.key.remoteJid) || '';
+    if (!chat.endsWith('@g.us')) return false;
+    let e = adminCache.get(chat);
+    if (!e || Date.now() - e.t > 60000) {
+      const md = await sock.groupMetadata(chat);
+      const ids = new Set();
+      for (const p of md.participants || []) if (p.admin) [p.id, p.lid, p.jid, p.phoneNumber].forEach(x => x && ids.add(numOf(x)));
+      e = { t: Date.now(), ids }; adminCache.set(chat, e);
+    }
+    const k = m.key || {};
+    return [m.sender, k.participant, k.participantAlt].some(j => j && e.ids.has(numOf(j)));
+  } catch (err) { console.error('[ERIN-ERR] adminCheck', err?.message); return false; }
+};
 const powerHook = async (m) => {
   try {
     const t = (m.text || m.body || '').trim();
@@ -106,17 +122,17 @@ const powerHook = async (m) => {
       return true;
     }
     const flat2 = t.replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/[^\p{L}]/gu, '');
-    if (!globalThis.erinOff && t.length <= 14 && (flat2 === 'ايرن' || flat2 === 'ايرين') && isOwnerMsg(m)) {
-      try { await m.reply('*🔒 وضع المالك فقط شغال، البوت هيتفاعل معاك انت بس. اكتب عام عشان يرجع للكل*'); } catch {}
+    if (!globalThis.erinOff && t.length <= 14 && (flat2 === 'ايرن' || flat2 === 'ايرين') && (isOwnerMsg(m) || await isGroupAdminMsg(m))) {
+      try { await m.reply('*🔒 وضع الادمنز شغال، البوت هيتفاعل مع المالك والادمنز بس. اكتب عام عشان يرجع للكل*'); } catch {}
       setAdminOnly(true);
       return true;
     }
-    if (!globalThis.erinOff && t.length <= 10 && flat2 === 'عام' && isOwnerMsg(m)) {
+    if (!globalThis.erinOff && t.length <= 10 && flat2 === 'عام' && (isOwnerMsg(m) || await isGroupAdminMsg(m))) {
       setAdminOnly(false);
       try { await m.reply('*🔓 رجع للكل، البوت بيرد على الكل تاني*'); } catch {}
       return true;
     }
-    if (globalThis.erinAdminOnly && !globalThis.erinOff && !isOwnerMsg(m)) return true;
+    if (globalThis.erinAdminOnly && !globalThis.erinOff && !isOwnerMsg(m) && !(await isGroupAdminMsg(m))) return true;
     if (globalThis.erinOff) return true;
   } catch (e) { console.error('[ERIN-ERR] powerHook', e?.message); }
   return false;
