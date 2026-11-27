@@ -188,6 +188,7 @@ const powerTimer = setInterval(() => {
   if (!cs || !Array.isArray(cs.beforeHandlers)) return;
   clearInterval(powerTimer);
   cs.beforeHandlers.unshift(powerHook);
+  cs.beforeHandlers.push(asterHook);
   cs.beforeHandlers.unshift(async (m) => (globalThis.erinOff ? false : protectHook(m)));
   console.log('[ERIN-POWER] hook installed, off =', globalThis.erinOff);
 }, 1000);
@@ -239,6 +240,27 @@ const greetTimer = setInterval(() => {
   clearInterval(greetTimer);
   console.log('[DARWIN-GREET] listener installed');
 }, 2000);
+
+/* ===== استر: reply with a sticker when someone says the word ===== */
+let ASTER = null;
+try { ASTER = fs.readFileSync(new URL('./assets/aster.webp', import.meta.url)); } catch (e) { console.error('[ERIN-ERR] aster sticker load', e?.message); }
+const asterLast = new Map();
+const asterHook = async (m) => {
+  try {
+    if (!ASTER || globalThis.erinOff || m.key?.fromMe) return false;
+    const t = (m.text || m.body || '').trim();
+    if (!t || t.length > 40) return false;
+    const flat = t.replace(/[\u064B-\u065F\u0670\u0640]/g, '').replace(/[أإآ]/g, 'ا');
+    if (!/(^|[\s!؟?.,،])استر($|[\s!؟?.,،])/.test(flat)) return false;
+    const chat = m.chat || m.key?.remoteJid;
+    if (!chat) return false;
+    const now = Date.now();
+    if (now - (asterLast.get(chat) || 0) < 20000) return false;
+    asterLast.set(chat, now);
+    await client.sock.sendMessage(chat, { sticker: ASTER }, { quoted: m });
+  } catch (e) { console.error('[ERIN-ERR] aster', e?.message); }
+  return false;
+};
 
 /* one-shot direct send test (only when DIRECT_TEST_TO is set) */
 let directDone = false;
