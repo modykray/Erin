@@ -41,11 +41,11 @@ let control = async (m, { command, text, conn, bot, participants }) => {
             return m.reply("✅ تم الطرد");
         }
         
-        if (command === "رفع") {
+        if (command === "رفاعي") {
             let user = getUser();
             if (!user) return m.reply("❌ منشن أو رد على العضو");
             await conn.groupParticipantsUpdate(m.chat, [user], 'promote');
-            return m.reply("✅ تم الرفع");
+            return conn.sendMessage(m.chat, { text: `@${user.split('@')[0].split(':')[0]} تم اخدك ع رفاعي بنجاح ✅`, mentions: [user] }, { quoted: m });
         }
         
         if (command === "خفض") {
@@ -60,8 +60,8 @@ let control = async (m, { command, text, conn, bot, participants }) => {
     }
 };
 
-control.usage = ['ضيف', 'طرد', 'رفع', 'خفض'];
-control.command = ['ضيف', 'طرد', 'رفع', 'خفض'];
+control.usage = ['ضيف', 'طرد', 'رفاعي', 'خفض'];
+control.command = ['ضيف', 'طرد', 'رفاعي', 'خفض'];
 control.admin = true;
 control.botAdmin = true;
 control.category = "admin";
