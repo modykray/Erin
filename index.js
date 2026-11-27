@@ -95,6 +95,14 @@ const wrapTimer = setInterval(() => {
     sock.ev.on('messages.upsert', ({ messages }) => {
       for (const m of messages || []) {
         const k = m.key || {};
+        try {
+          const me = (sock.user?.id || '').split(':')[0].split('@')[0];
+          const meLid = (sock.user?.lid || '').split(':')[0].split('@')[0];
+          const txt = m.message?.conversation || m.message?.extendedTextMessage?.text || '';
+          const num = (j) => (j || '').split(':')[0].split('@')[0];
+          const own = [k.remoteJid, k.participant, k.remoteJidAlt, k.participantAlt].some(j => j && (num(j) === me || (meLid && num(j) === meLid)));
+          console.log('[ERIN-IN]', JSON.stringify({ id: k.id, remoteJid: k.remoteJid, participant: k.participant, remoteJidAlt: k.remoteJidAlt, participantAlt: k.participantAlt, fromMe: !!k.fromMe, ownNumberInvolved: own, botUser: sock.user?.id, botLid: sock.user?.lid, push: m.pushName, text: txt.slice(0, 40) }));
+        } catch (e) { console.log('[ERIN-IN] log failed', e?.message); }
         const alt = k.remoteJidAlt || k.senderPn || k.participantPn;
         if (k.remoteJid?.endsWith('@lid') && alt?.endsWith('@s.whatsapp.net')) lidToPn.set(k.remoteJid, alt);
       }
