@@ -266,6 +266,7 @@ const powerTimer = setInterval(() => {
   clearInterval(powerTimer);
   cs.beforeHandlers.unshift(powerHook);
   cs.beforeHandlers.push(stickerHook);
+  cs.beforeHandlers.push(khodHook);
   cs.beforeHandlers.push(swearHook);
   cs.beforeHandlers.push(linkHook);
   cs.beforeHandlers.push(async (m) => (globalThis.erinOff ? false : (globalThis.erinStoryHook ? globalThis.erinStoryHook(m) : false)));
@@ -328,6 +329,30 @@ const STICKERS = [
   { name: 'aster', buf: loadSticker('aster.webp'), re: new RegExp('(^|' + SEP + ')استر($|' + SEP + ')') },
   { name: 'mesh-fahem', buf: loadSticker('mesh_fahem.webp'), re: new RegExp('(^|' + SEP + ')مش\\s+فاهم(ه|ين|ك|ني|ها|هم)?($|' + SEP + ')') }
 ];
+
+/* ===== خد sticker (needs reply or mention) ===== */
+const KHOD_BUF = loadSticker('khod.webp');
+const khodLast = new Map();
+globalThis.erinKhod = async (m) => {
+  if (!KHOD_BUF) return false;
+  const chat = m.chat || m.key?.remoteJid;
+  const hasTarget = !!(m.quoted || (m.mentionedJid && m.mentionedJid.length) || (m.msg?.contextInfo?.mentionedJid || []).length);
+  if (!chat || !hasTarget) return false;
+  const k = chat + '|' + numOf(m.sender);
+  const now = Date.now();
+  if (now - (khodLast.get(k) || 0) < 5000) return true;
+  khodLast.set(k, now);
+  await client.sock.sendMessage(chat, { sticker: KHOD_BUF }, { quoted: m.quoted?.fakeObj ? m.quoted.fakeObj() : m });
+  return true;
+};
+const khodHook = async (m) => {
+  try {
+    if (globalThis.erinOff || m.key?.fromMe) return false;
+    const t = (m.text || m.body || '').trim();
+    if (!/^خد(\s+@?\S+)?$/.test(t)) return false;
+    return await globalThis.erinKhod(m);
+  } catch (e) { console.error('[ERIN-ERR] khod', e?.message); return false; }
+};
 const stickerLast = new Map();
 const stickerHook = async (m) => {
   try {
