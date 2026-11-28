@@ -7,6 +7,13 @@ let scores = {};
 try { scores = JSON.parse(fs.readFileSync(FILE, 'utf8')); } catch {}
 const save = () => { try { fs.writeFileSync(FILE, JSON.stringify(scores)); } catch (e) { console.error('[ERIN-ERR] quiz save', e?.message); } };
 
+const CUPS_FILE = DATA_DIR + '/erin_quiz_cups.json';
+let cups = {};
+try { cups = JSON.parse(fs.readFileSync(CUPS_FILE, 'utf8')); } catch {}
+const saveCups = () => { try { fs.writeFileSync(CUPS_FILE, JSON.stringify(cups)); } catch (e) { console.error('[ERIN-ERR] quiz cups save', e?.message); } };
+const WIN_PTS = 200;
+const ordinal = (i) => ['🥇 المركز الأول', '🥈 المركز التاني', '🥉 المركز التالت'][i] || `🎖️ المركز ${i + 1}`;
+
 const norm = (x) => (x || '').normalize('NFKC')
   .replace(/[\u064B-\u065F\u0670\u0640]/g, '')
   .replace(/[٠-٩]/g, d => String(d.charCodeAt(0) - 0x660))
@@ -101,18 +108,41 @@ const pick = (chat) => {
   return BANK[i];
 };
 
+const cupsText = (chat, jid) => {
+  const c = cups[chat]?.[jid] || { p1: 0, p2: 0, p3: 0, low: 0 };
+  const pts = scores[chat]?.[jid] || 0;
+  return `🏆 *بطولات @${numOf(jid)}*\n🥇 المركز الأول: *${c.p1}*\n🥈 المركز التاني: *${c.p2}*\n🥉 المركز التالت: *${c.p3}*\n🎖️ مراكز بعدهم: *${c.low}*\n\n🧮 نقطك في الجولة الحالية: *${pts}/${WIN_PTS}*`;
+};
+
+// round ends when someone reaches WIN_PTS: rank everyone with points, record cups, reset the round
+const finishRound = (chat) => {
+  const sc = scores[chat] || {};
+  const ranked = Object.entries(sc).filter(([, p]) => p > 0).sort((a, b) => b[1] - a[1]);
+  cups[chat] = cups[chat] || {};
+  ranked.forEach(([j], i) => {
+    const c = cups[chat][j] = cups[chat][j] || { p1: 0, p2: 0, p3: 0, low: 0 };
+    if (i === 0) c.p1++; else if (i === 1) c.p2++; else if (i === 2) c.p3++; else c.low++;
+  });
+  scores[chat] = {};
+  save(); saveCups();
+  return ranked;
+};
+
 const board = async (m, conn) => {
   const sc = scores[m.chat] || {};
   const top = Object.entries(sc).sort((a, b) => b[1] - a[1]).slice(0, 10);
   if (!top.length) return m.reply('*🏆 لسه محدش كسب نقط. اكتب .اختبر ذكاءك وكون أول واحد*');
   const medals = ['🥇', '🥈', '🥉'];
-  const txt = '🏆 *ترتيب العباقرة*\n\n' + top.map(([j, p], i) => `${medals[i] || (i + 1) + '.'} @${numOf(j)} ~ *${p}* نقطة`).join('\n');
+  const txt = '🏆 *ترتيب العباقرة*\n\n' + top.map(([j, p], i) => `${medals[i] || (i + 1) + '.'} @${numOf(j)} ~ *${p}/${WIN_PTS}* نقطة`).join('\n');
   await conn.sendMessage(m.chat, { text: txt, mentions: top.map(t => t[0]) }, { quoted: m });
 };
 
 const handler = async (m, { conn, text }) => {
   const t = norm(text || '');
   if (/^(ترتيب|المتصدرين|لوحه الشرف|الصدارة)/.test(t)) return board(m, conn);
+  if (/^(بطوله|بطولتي|بطولات|كاسات|كاس)/.test(t)) {
+    return conn.sendMessage(m.chat, { text: cupsText(m.chat, m.sender), mentions: [m.sender] }, { quoted: m });
+  }
   if (/^(نقاطي|نقطي|رصيدي)/.test(t)) {
     const p = scores[m.chat]?.[m.sender] || 0;
     return conn.sendMessage(m.chat, { text: `🧮 @${numOf(m.sender)} معاك *${p}* نقطة في الجروب ده`, mentions: [m.sender] }, { quoted: m });
@@ -144,6 +174,12 @@ handler.before = async (m, { conn }) => {
       const pts = game.hint ? HINT_PTS : BASE_PTS;
       scores[m.chat] = scores[m.chat] || {};
       scores[m.chat][m.sender] = (scores[m.chat][m.sender] || 0) + pts; save();
+      if (scores[m.chat][m.sender] >= WIN_PTS) {
+        const ranked = finishRound(m.chat);
+        const txt = `🎉🏆 *انتهت البطولة!* @${numOf(m.sender)} وصل ${WIN_PTS} نقطة وبقى *البطل* 🥇\n\n` + ranked.map(([j, p], i) => `${ordinal(i)}: @${numOf(j)} (${p} نقطة)`).join('\n') + `\n\nكل واحد خد كاس على مركزه، واكتب *.بطولة* تشوف كاساتك. النقط اتصفرت وجولة جديدة بدأت 🔥`;
+        await conn.sendMessage(m.chat, { text: txt, mentions: ranked.map(r => r[0]) }, { quoted: m });
+        return true;
+      }
       await conn.sendMessage(m.chat, { text: `✅ *إجابة صح!* @${numOf(m.sender)} عبقري زمانك 🧠\n+${pts} نقط، رصيدك *${scores[m.chat][m.sender]}*\n\n> اكتب *.اختبر ذكاءك* لسؤال تاني أو *.اختبر ترتيب* للمتصدرين`, mentions: [m.sender] }, { quoted: m });
       return true;
     }
