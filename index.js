@@ -227,8 +227,8 @@ const saveLock = () => { try { fs.writeFileSync(LOCK_FILE, JSON.stringify(lockSt
 const strikes = new Map();
 const STRIKE_MAX = 5, STRIKE_WINDOW = 10 * 60 * 1000, LOCK_MS = 10 * 60 * 1000;
 const swearStrike = async (chat, who) => {
-  if (!who || lockState[chat]) return;
-  const k = chat + '|' + numOf(who);
+  if (lockState[chat]) return;
+  const k = chat + '|all';
   const now = Date.now();
   const arr = (strikes.get(k) || []).filter(t => now - t < STRIKE_WINDOW);
   arr.push(now); strikes.set(k, arr);
