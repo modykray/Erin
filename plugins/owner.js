@@ -1,3 +1,7 @@
+import fs from 'fs';
+let OWNER_THUMB = null;
+try { OWNER_THUMB = fs.readFileSync(new URL('../assets/owner_thumb.jpg', import.meta.url)); } catch (e) { console.error('[OWNER] thumb load failed:', e?.message); }
+
 let handler = async (m, { conn, bot }) => {
   let watermark = 'إيرن / مودي';
   
@@ -22,7 +26,7 @@ END:VCARD`;
         title: '𝑇𝛨𝛯 𝛩𝑊𝛮𝛯𝑅',
         body: watermark,
         sourceUrl: 'https://whatsapp.com/channel/0029Vb8xDV8A2pLCoK6KtH36',
-        thumbnailUrl: img,
+        ...(OWNER_THUMB ? { thumbnail: OWNER_THUMB } : { thumbnailUrl: img }),
         mediaType: 1,
         showAdAttribution: true,
         renderLargerThumbnail: true
