@@ -219,6 +219,50 @@ globalThis.erinSwear = {
     return (md.participants || []).some(p => p.admin && [p.id, p.lid, p.jid, p.phoneNumber].filter(Boolean).map(numOf).some(x => me.includes(x)));
   },
 };
+/* strikes: more than 5 deleted swear messages from one person in a group within 10 min -> close group 10 min */
+const LOCK_FILE = SWEAR_FILE.replace('erin_swear.json', 'erin_lock.json');
+let lockState = {};
+try { lockState = JSON.parse(fs.readFileSync(LOCK_FILE, 'utf8')); } catch {}
+const saveLock = () => { try { fs.writeFileSync(LOCK_FILE, JSON.stringify(lockState)); } catch (e) { console.error('[ERIN-ERR] lock save', e?.message); } };
+const strikes = new Map();
+const STRIKE_MAX = 5, STRIKE_WINDOW = 10 * 60 * 1000, LOCK_MS = 10 * 60 * 1000;
+const swearStrike = async (chat, who) => {
+  if (!who || lockState[chat]) return;
+  const k = chat + '|' + numOf(who);
+  const now = Date.now();
+  const arr = (strikes.get(k) || []).filter(t => now - t < STRIKE_WINDOW);
+  arr.push(now); strikes.set(k, arr);
+  if (arr.length <= STRIKE_MAX) return;
+  if (!(await globalThis.erinSwear.botIsAdmin(chat))) return;
+  const md = await client.sock.groupMetadata(chat);
+  if (md.announce) return;
+  for (const kk of [...strikes.keys()]) if (kk.startsWith(chat + '|')) strikes.delete(kk);
+  await client.sock.groupSettingUpdate(chat, 'announcement');
+  lockState[chat] = Date.now() + LOCK_MS; saveLock();
+  try { await client.sock.sendMessage(chat, { text: '*🔒 اتقفل الجروب 10 دقايق (للمشرفين بس) بسبب كتر السباب. هيفتح لوحده بعدها*' }); } catch {}
+  console.log('[ERIN-SWEAR] group locked', chat);
+};
+const lockTimer = setInterval(async () => {
+  try {
+    if (!client.sock) return;
+    for (const chat of Object.keys(lockState).filter(x => x !== '__tries')) {
+      if (Date.now() < lockState[chat]) continue;
+      try {
+        await client.sock.groupSettingUpdate(chat, 'not_announcement');
+        try { await client.sock.sendMessage(chat, { text: '*🔓 الجروب اتفتح تاني، التزموا بالأدب*' }); } catch {}
+        console.log('[ERIN-SWEAR] group reopened', chat);
+        delete lockState[chat]; saveLock();
+      } catch (e) {
+        console.error('[ERIN-ERR] reopen', e?.message);
+        lockState[chat] = Date.now() + 60000; // retry in a minute
+        if (!lockState.__tries) lockState.__tries = {};
+        const n = (lockState.__tries[chat] = (lockState.__tries[chat] || 0) + 1);
+        if (n >= 5) { delete lockState[chat]; delete lockState.__tries[chat]; }
+        saveLock();
+      }
+    }
+  } catch {}
+}, 15000);
 const swearHook = async (m) => {
   try {
     if (globalThis.erinOff) return false;
@@ -229,6 +273,7 @@ const swearHook = async (m) => {
     if (isOwnerMsg(m) || await isGroupAdminMsg(m)) return false;
     await client.sock.sendMessage(chat, { delete: m.key });
     console.log('[ERIN-SWEAR] deleted msg in', chat);
+    try { await swearStrike(chat, m.sender || m.key?.participant || ''); } catch (e) { console.error('[ERIN-ERR] swearStrike', e?.message); }
     return true;
   } catch (e) { console.error('[ERIN-ERR] swearHook', e?.message); return false; }
 };
