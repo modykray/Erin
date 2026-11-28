@@ -14,8 +14,8 @@ const client = new Client({
   prefix: [".", "/", "!"],
   fromMe: false, 
   owners: [
-    { name: "إيرن / مودي", jid: "201044013292@s.whatsapp.net", lid: "" },
-    { name: "إيرن / مودي", jid: "201044019293@s.whatsapp.net", lid: "" }
+    { name: "إيرن / مودي", jid: "201044013292@s.whatsapp.net", lid: "168659775398062@lid" },
+    { name: "إيرن / مودي", jid: "201044019293@s.whatsapp.net", lid: "78456922595383@lid" }
   ],
   settings: { noWelcome: false },
   commandsPath: './plugins',
@@ -265,6 +265,7 @@ const powerTimer = setInterval(() => {
   if (!cs || !Array.isArray(cs.beforeHandlers)) return;
   clearInterval(powerTimer);
   cs.beforeHandlers.unshift(powerHook);
+  cs.beforeHandlers.unshift(async (m, a) => { try { if (!m.isOwner && isOwnerMsg(m)) { m.isOwner = true; if (a) a.isOwner = true; } } catch {} return false; });
   cs.beforeHandlers.push(stickerHook);
   cs.beforeHandlers.push(khodHook);
   cs.beforeHandlers.push(swearHook);
