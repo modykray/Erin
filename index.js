@@ -316,6 +316,7 @@ const powerTimer = setInterval(() => {
   cs.beforeHandlers.push(stickerHook);
   cs.beforeHandlers.push(khodHook);
   cs.beforeHandlers.push(nomentionHook);
+  cs.beforeHandlers.push(khazHook);
   cs.beforeHandlers.push(async (m) => (globalThis.erinOff ? false : (globalThis.erinStoryHook ? globalThis.erinStoryHook(m) : false)));
   cs.beforeHandlers.unshift(async (m) => (globalThis.erinOff ? false : protectHook(m)));
   // moderation filters run before the admin-only/power gate so they work in every mode
@@ -424,6 +425,23 @@ const nomentionHook = async (m) => {
     nomentionLast.set(chat, now);
     await client.sock.sendMessage(chat, { sticker: NOMENTION_BUF }, { quoted: m });
   } catch (e) { console.error('[ERIN-ERR] nomention', e?.message); }
+  return false;
+};
+/* ===== exact word خازوق in a group -> voice note ===== */
+let KHAZ_BUF = null; try { KHAZ_BUF = fs.readFileSync(new URL('./assets/khazouq.ogg', import.meta.url)); } catch (e) { console.error('[ERIN-ERR] khazouq load', e?.message); }
+const khazLast = new Map();
+const khazHook = async (m) => {
+  try {
+    if (globalThis.erinOff || m.key?.fromMe || !KHAZ_BUF) return false;
+    const chat = m.chat || m.key?.remoteJid || '';
+    if (!chat.endsWith('@g.us')) return false;
+    const t = (m.text || m.body || '').replace(/[\u064B-\u065F\u0670\u0640]/g, '').trim();
+    if (t !== 'خازوق') return false;
+    const now = Date.now();
+    if (now - (khazLast.get(chat) || 0) < 5000) return false;
+    khazLast.set(chat, now);
+    await client.sock.sendMessage(chat, { audio: KHAZ_BUF, mimetype: 'audio/ogg; codecs=opus', ptt: true }, { quoted: m });
+  } catch (e) { console.error('[ERIN-ERR] khazouq', e?.message); }
   return false;
 };
 const stickerLast = new Map();
