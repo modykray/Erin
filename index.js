@@ -342,7 +342,8 @@ globalThis.erinKhod = async (m) => {
   const now = Date.now();
   if (now - (khodLast.get(k) || 0) < 5000) return true;
   khodLast.set(k, now);
-  await client.sock.sendMessage(chat, { sticker: KHOD_BUF }, { quoted: m.quoted?.fakeObj ? m.quoted.fakeObj() : m });
+  let qt = m; try { if (m.quoted?.fakeObj) qt = m.quoted.fakeObj(); } catch {}
+  try { await client.sock.sendMessage(chat, { sticker: KHOD_BUF }, { quoted: qt }); } catch (e) { await client.sock.sendMessage(chat, { sticker: KHOD_BUF }); }
   return true;
 };
 const khodHook = async (m) => {
