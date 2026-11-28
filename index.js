@@ -315,6 +315,7 @@ const powerTimer = setInterval(() => {
   cs.beforeHandlers.unshift(async (m, a) => { try { if (!m.isOwner && isOwnerMsg(m)) { m.isOwner = true; if (a) a.isOwner = true; } } catch {} return false; });
   cs.beforeHandlers.push(stickerHook);
   cs.beforeHandlers.push(khodHook);
+  cs.beforeHandlers.push(nomentionHook);
   cs.beforeHandlers.push(async (m) => (globalThis.erinOff ? false : (globalThis.erinStoryHook ? globalThis.erinStoryHook(m) : false)));
   cs.beforeHandlers.unshift(async (m) => (globalThis.erinOff ? false : protectHook(m)));
   // moderation filters run before the admin-only/power gate so they work in every mode
@@ -402,6 +403,28 @@ const khodHook = async (m) => {
     if (!/^خد(\s+@?\S+)?$/.test(t)) return false;
     return await globalThis.erinKhod(m);
   } catch (e) { console.error('[ERIN-ERR] khod', e?.message); return false; }
+};
+/* ===== mention of the developer in a group -> sticker reply ===== */
+const NOMENTION_BUF = loadSticker('nomention.webp');
+const DEV_IDS = new Set(['201044013292', '168659775398062']);
+const nomentionLast = new Map();
+const nomentionHook = async (m) => {
+  try {
+    if (globalThis.erinOff || m.key?.fromMe || !NOMENTION_BUF) return false;
+    const chat = m.chat || m.key?.remoteJid || '';
+    if (!chat.endsWith('@g.us')) return false;
+    const ments = [...(m.mentionedJid || []), ...(m.msg?.contextInfo?.mentionedJid || [])].filter(Boolean).map(numOf);
+    if (!ments.some(x => DEV_IDS.has(x))) return false;
+    const senders = [m.sender, m.key?.participant, m.key?.participantAlt].filter(Boolean).map(numOf);
+    if (senders.some(x => DEV_IDS.has(x))) return false;
+    const me = [client.sock?.user?.id, client.sock?.user?.lid].filter(Boolean).map(numOf);
+    if (senders.some(x => me.includes(x))) return false;
+    const now = Date.now();
+    if (now - (nomentionLast.get(chat) || 0) < 30000) return false;
+    nomentionLast.set(chat, now);
+    await client.sock.sendMessage(chat, { sticker: NOMENTION_BUF }, { quoted: m });
+  } catch (e) { console.error('[ERIN-ERR] nomention', e?.message); }
+  return false;
 };
 const stickerLast = new Map();
 const stickerHook = async (m) => {
