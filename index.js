@@ -228,6 +228,34 @@ const swearHook = async (m) => {
     return true;
   } catch (e) { console.error('[ERIN-ERR] swearHook', e?.message); return false; }
 };
+
+/* ===== anti-link (رابط) ===== */
+const LINK_FILE = (process.env.SESSION_PATH ? process.env.SESSION_PATH.replace(/\/[^/]*$/, '') : '.') + '/erin_link.json';
+let linkGroups = {};
+try { linkGroups = JSON.parse(fs.readFileSync(LINK_FILE, 'utf8')); } catch {}
+const saveLink = () => { try { fs.writeFileSync(LINK_FILE, JSON.stringify(linkGroups)); } catch (e) { console.error('[ERIN-ERR] link save', e?.message); } };
+const LINK_RE = /(?:https?:\/\/|www\.|wa\.me\/|t\.me\/|chat\.whatsapp\.com|whatsapp\.com\/(?:channel|catalog)|discord\.gg|bit\.ly|tinyurl\.com|(?:^|[^\p{L}\p{N}@])[a-z0-9-]{2,}\.(?:com|net|org|io|me|gg|ly|co|app|xyz|link|ru|tv|info|to|cc|ws|click|site|online|shop|store|live|vip|top|club|fun|cloud|dev|ai|eg|sa|ae)(?:[\/:?#]|$|[^\p{L}\p{N}]))/iu;
+const hasLink = (t) => LINK_RE.test((t || '').normalize('NFKC').replace(/\s*\[?\(?\s*(?:dot|نقطة)\s*\)?\]?\s*/gi, '.').replace(/[\u200B-\u200F\u202A-\u202E]/g, ''));
+globalThis.erinLink = {
+  isOn: (chat) => !!linkGroups[chat],
+  set: (chat, on) => { if (on) linkGroups[chat] = 1; else delete linkGroups[chat]; saveLink(); },
+  isGroupAdmin: isGroupAdminMsg,
+  botIsAdmin: (chat) => globalThis.erinSwear.botIsAdmin(chat),
+};
+globalThis.erinHasLink = hasLink;
+const linkHook = async (m) => {
+  try {
+    if (globalThis.erinOff) return false;
+    const chat = m.chat || (m.key && m.key.remoteJid) || '';
+    if (!chat.endsWith('@g.us') || !linkGroups[chat] || m.key?.fromMe) return false;
+    const t = [m.text, m.body, m.msg?.matchedText, m.msg?.canonicalUrl].filter(Boolean).join(' ');
+    if (!t || !hasLink(t)) return false;
+    if (isOwnerMsg(m) || await isGroupAdminMsg(m)) return false;
+    await client.sock.sendMessage(chat, { delete: m.key });
+    console.log('[ERIN-LINK] deleted msg in', chat);
+    return true;
+  } catch (e) { console.error('[ERIN-ERR] linkHook', e?.message); return false; }
+};
 const powerTimer = setInterval(() => {
   const cs = client.commandSystem;
   if (!cs || !Array.isArray(cs.beforeHandlers)) return;
@@ -235,6 +263,7 @@ const powerTimer = setInterval(() => {
   cs.beforeHandlers.unshift(powerHook);
   cs.beforeHandlers.push(stickerHook);
   cs.beforeHandlers.push(swearHook);
+  cs.beforeHandlers.push(linkHook);
   cs.beforeHandlers.unshift(async (m) => (globalThis.erinOff ? false : protectHook(m)));
   console.log('[ERIN-POWER] hook installed, off =', globalThis.erinOff);
 }, 1000);
