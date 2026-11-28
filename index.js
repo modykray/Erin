@@ -420,7 +420,7 @@ const nomentionHook = async (m) => {
     const me = [client.sock?.user?.id, client.sock?.user?.lid].filter(Boolean).map(numOf);
     if (senders.some(x => me.includes(x))) return false;
     const now = Date.now();
-    if (now - (nomentionLast.get(chat) || 0) < 30000) return false;
+    if (now - (nomentionLast.get(chat) || 0) < 5000) return false;
     nomentionLast.set(chat, now);
     await client.sock.sendMessage(chat, { sticker: NOMENTION_BUF }, { quoted: m });
   } catch (e) { console.error('[ERIN-ERR] nomention', e?.message); }
