@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { Scrapy } from 'meowsab';
 
 /* اختبر ذكاءك: static bank of Egyptian-Arabic riddles and logic questions with points */
 const DATA_DIR = process.env.SESSION_PATH ? process.env.SESSION_PATH.replace(/\/[^/]*$/, '') : '.';
@@ -90,7 +91,6 @@ const BANK = [
 const INTROS = ['🧠 *اختبر ذكاءك يا بطل*', '🤔 *سؤال للعباقرة بس*', '🎯 *شغل مخك يا فنان*', '🧩 *لغز على الماشي*'];
 const TIMEOUT_MS = 60000, MAX_WRONG = 5, HINT_AFTER = 2, BASE_PTS = 10, HINT_PTS = 5;
 if (!global.iqActive) global.iqActive = {};
-const used = new Map();
 const numOf = (j) => (j || '').split(':')[0].split('@')[0];
 
 const isRight = (text, g) => {
@@ -100,12 +100,95 @@ const isRight = (text, g) => {
   return g.n.some(a => a && (n === a || padded.includes(' ' + a + ' ') || (n.length >= 5 && !n.includes(' ') && a.length >= 5 && lev(n, a) <= 1)));
 };
 
-const pick = (chat) => {
-  let u = used.get(chat) || new Set();
-  if (u.size >= BANK.length) u = new Set();
-  let i; do { i = Math.floor(Math.random() * BANK.length); } while (u.has(i));
-  u.add(i); used.set(chat, u);
-  return BANK[i];
+/* ===== unlimited questions: AI generates, a second AI call must solve it, history in /data prevents repeats ===== */
+const HIST_FILE = DATA_DIR + '/erin_quiz_hist.json';
+let hist = {};
+try { hist = JSON.parse(fs.readFileSync(HIST_FILE, 'utf8')); } catch {}
+const saveHist = () => { try { fs.writeFileSync(HIST_FILE, JSON.stringify(hist)); } catch (e) { console.error('[ERIN-ERR] quiz hist save', e?.message); } };
+const toks = (q) => new Set(norm(q).split(' ').filter(w => w.length > 1));
+const sim = (a, b) => { let i = 0; for (const x of a) if (b.has(x)) i++; return i / (a.size + b.size - i || 1); };
+const BANK_TOK = BANK.map(b => toks(b.q));
+const seen = (chat, q) => {
+  const t = toks(q);
+  if (BANK_TOK.some(b => sim(t, b) > 0.6)) return true;
+  return (hist[chat] || []).some(h => !h.startsWith('S:') && sim(t, new Set(h.split(' '))) > 0.6);
+};
+const remember = (chat, q) => {
+  const h = hist[chat] = hist[chat] || [];
+  h.push([...toks(q)].join(' '));
+  if (h.length > 1500) h.splice(0, h.length - 1500);
+  saveHist();
+};
+const KINDS = ['لغز كلمات', 'لغز منطقي', 'مسألة حساب ذهني بسيطة', 'سلسلة أرقام أو حروف', 'لغز من حياة المصريين اليومية', 'سؤال ذكاء بحيلة', 'لغز عن حيوان أو أكل أو أداة', 'مسألة أعمار أو أيام أو وقت', 'لغز الأشياء (إيه هو/هي؟)'];
+let openaiBadUntil = 0;
+const ai = async (system, user, json, maxTokens) => {
+  const key = process.env.OPENAI_API_KEY;
+  if (key && Date.now() >= openaiBadUntil) {
+    try {
+      const r = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'gpt-4o-mini', max_tokens: maxTokens, temperature: json ? 1 : 0, ...(json ? { response_format: { type: 'json_object' } } : {}), messages: [{ role: 'system', content: system }, { role: 'user', content: user }] }),
+        signal: AbortSignal.timeout(25000),
+      });
+      const d = await r.json();
+      const out = d?.choices?.[0]?.message?.content?.trim();
+      if (out) return out;
+      console.log('[ERIN-IQ] openai failed:', d?.error?.code || r.status);
+    } catch (e) { console.log('[ERIN-IQ] openai error:', e?.message); }
+    openaiBadUntil = Date.now() + 10 * 60 * 1000;
+  }
+  const { data } = await Scrapy.ZeroAI(user, `${system}\nالطلب:\n${user}`);
+  const out = String(data?.answer || '').trim();
+  if (!out) throw new Error('ai empty');
+  return out;
+};
+const parseJson = (raw) => { const m = String(raw).match(/\{[\s\S]*\}/); return JSON.parse(m ? m[0] : raw); };
+const GEN_SYS = 'أنت بوت واتساب مصري خفيف الدم بتألف ألغاز وأسئلة ذكاء بالعامية المصرية. اكتب سؤال واحد جديد وأصلي، له إجابة واحدة قصيرة وواضحة ومؤكدة (كلمة أو كلمتين أو رقم)، ومينفعش يكون فيه غموض أو أكتر من إجابة صح. لو السؤال حساب، احسب الإجابة بحذر. ممنوع: الشتايم، الجنس، الدين والمقدسات، السياسة، العنف، الإساءة لأي فئة. رد بـ JSON فقط بالشكل: {"q":"نص السؤال","answers":["الإجابة الأساسية","صيغة تانية","بدون ال","بالأرقام أو بالحروف لو رقم"]} مع 3 إلى 6 صيغ مقبولة للإجابة.';
+const generate = async (avoid) => {
+  const kind = KINDS[Math.floor(Math.random() * KINDS.length)];
+  const raw = await ai(GEN_SYS, `النوع: ${kind}\nرقم عشوائي للتنويع: ${Math.floor(Math.random() * 100000)}\nمتكررش الأسئلة دي:\n${avoid.join('\n')}`, true, 400);
+  const o = parseJson(raw);
+  const q = String(o.q || '').trim();
+  const a = (Array.isArray(o.answers) ? o.answers : []).map(x => String(x).trim()).filter(Boolean).slice(0, 8);
+  if (q.length < 12 || q.length > 400 || !a.length || a[0].length > 40) throw new Error('bad format');
+  const g = { q, a, n: a.map(norm), gen: true };
+  // verification: a second independent call must solve it and match an accepted answer
+  const solved = await ai('حل السؤال التالي. رد بالإجابة النهائية فقط، كلمة أو كلمتين أو رقم، بدون شرح.', q, false, 40);
+  if (!isRight(solved, g)) throw new Error('verify failed');
+  return g;
+};
+const pool = [];
+let refilling = false, failUntil = 0;
+const refill = async (chat) => {
+  if (refilling || Date.now() < failUntil || pool.length >= 3) return;
+  refilling = true;
+  try {
+    for (let tries = 0; pool.length < 3 && tries < 6; tries++) {
+      try {
+        const avoid = pool.map(p => p.q);
+        const g = await generate(avoid);
+        if (!seen(chat, g.q) && !pool.some(p => sim(toks(p.q), toks(g.q)) > 0.6)) pool.push(g);
+      } catch (e) { console.log('[ERIN-IQ] gen skipped:', e?.message); if (/no key|ai empty/.test(e?.message || '')) { failUntil = Date.now() + 60000; break; } }
+    }
+  } finally { refilling = false; }
+};
+setTimeout(() => { refill('').catch(() => {}); }, 20000);
+const pick = async (chat) => {
+  // 1) a generated question nobody in this group has seen; 2) generate one now; 3) unused static; 4) any static
+  let g = null;
+  for (let i = 0; i < pool.length && !g; i++) if (!seen(chat, pool[i].q)) g = pool.splice(i, 1)[0];
+  if (!g && Date.now() >= failUntil) {
+    for (let t = 0; t < 3 && !g; t++) { try { const c = await generate([]); if (!seen(chat, c.q)) g = c; } catch (e) { console.log('[ERIN-IQ] gen failed:', e?.message); if (/no key|ai empty/.test(e?.message || '')) { failUntil = Date.now() + 60000; break; } } }
+  }
+  if (!g) {
+    const u = new Set((hist[chat] || []).filter(x => x.startsWith('S:')).map(x => x.slice(2)));
+    const left = BANK.map((b, i) => i).filter(i => !u.has(String(i)));
+    const idx = left.length ? left[Math.floor(Math.random() * left.length)] : Math.floor(Math.random() * BANK.length);
+    (hist[chat] = hist[chat] || []).push('S:' + idx); saveHist();
+    g = BANK[idx];
+  } else remember(chat, g.q);
+  refill(chat).catch(() => {});
+  return g;
 };
 
 const cupsText = (chat, jid) => {
@@ -151,7 +234,10 @@ const handler = async (m, { conn, text }) => {
   if (cur) {
     return m.reply('*⏳ فيه سؤال لسه مستني إجابة، رد على رسالة السؤال*');
   }
-  const g = pick(m.chat);
+  global.iqActive[m.chat] = { pending: true, timeout: null };
+  if (!pool.length) { try { await conn.sendPresenceUpdate('composing', m.chat); } catch {} }
+  let g;
+  try { g = await pick(m.chat); } catch (e) { g = BANK[Math.floor(Math.random() * BANK.length)]; } finally { delete global.iqActive[m.chat]; }
   const msg = await conn.sendMessage(m.chat, { text: `${INTROS[Math.floor(Math.random() * INTROS.length)]}\n\n${g.q}\n\n⏱️ معاك دقيقة. رد على رسالة السؤال بإجابتك\n💰 الإجابة الصح بـ ${BASE_PTS} نقط` }, { quoted: m });
   global.iqActive[m.chat] = {
     g, msgId: msg.key.id, wrong: 0, hint: false,
