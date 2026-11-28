@@ -194,10 +194,17 @@ const normAr = (x) => (x || '').normalize('NFKC').replace(/[\u064B-\u065F\u0670\
   .replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/ؤ/g, 'و').replace(/ئ/g, 'ي').replace(/ک/g, 'ك').replace(/ی/g, 'ي')
   .toLowerCase().replace(/(.)\1+/gu, '$1');
 const SWEAR_WORDS = new Set('كس بز طيز زب تيز تيظك تيظ تيزك كسمك علق خول متناك متناكه شرموطه'.split(' ').map(normAr));
+const SWEAR_RES = [
+  /^(?:و|ف)?(?:احا|احه)$/,
+  /^[وف]?(?:يا|ال|[يبولكف])?خول(?:ك|كم|ي|نا|ات|ين)?$/,
+  /^[وف]?(?:يا|ال|[يبولكف])?علق(?:ك|كم|نا|ني)?$/,
+  /^(?:يا|[يبولكفت])?كسم(?:ك|كم|ي|ه|ها|هم|نا|ات|ين)?$/,
+];
 const hasSwear = (text) => {
   const toks = normAr(text).split(/[^\p{L}\p{N}]+/u).filter(Boolean);
-  return toks.some(t => SWEAR_WORDS.has(t) || (t.length > 2 && t[0] === 'و' && SWEAR_WORDS.has(t.slice(1))));
+  return toks.some(t => SWEAR_WORDS.has(t) || (t.length > 2 && t[0] === 'و' && SWEAR_WORDS.has(t.slice(1))) || SWEAR_RES.some(r => r.test(t)));
 };
+globalThis.erinHasSwear = hasSwear;
 globalThis.erinSwear = {
   isOn: (chat) => !!swearGroups[chat],
   set: (chat, on) => { if (on) swearGroups[chat] = 1; else delete swearGroups[chat]; saveSwear(); },
