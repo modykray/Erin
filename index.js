@@ -190,8 +190,8 @@ const SWEAR_FILE = (process.env.SESSION_PATH ? process.env.SESSION_PATH.replace(
 let swearGroups = {};
 try { swearGroups = JSON.parse(fs.readFileSync(SWEAR_FILE, 'utf8')); } catch {}
 const saveSwear = () => { try { fs.writeFileSync(SWEAR_FILE, JSON.stringify(swearGroups)); } catch (e) { console.error('[ERIN-ERR] swear save', e?.message); } };
-const normAr = (x) => (x || '').normalize('NFKC').replace(/[\u064B-\u065F\u0670\u0640\u06D6-\u06ED]/g, '')
-  .replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/ؤ/g, 'و').replace(/ئ/g, 'ي').replace(/ک/g, 'ك').replace(/ی/g, 'ي')
+const normAr = (x) => (x || '').normalize('NFKC').replace(/[\u200B-\u200F\u202A-\u202E\u2060\uFEFF]/g, '').replace(/[\u064B-\u065F\u0670\u0640\u06D6-\u06ED]/g, '')
+  .replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/ؤ/g, 'و').replace(/ئ/g, 'ي').replace(/[\u06A9-\u06B4\u0762-\u0764\u08B4]/g, 'ك').replace(/ی/g, 'ي')
   .toLowerCase().replace(/(.)\1+/gu, '$1');
 const SWEAR_WORDS = new Set('كس بز طيز زب تيز تيظك تيظ تيزك كسمك علق خول متناك متناكه شرموطه'.split(' ').map(normAr));
 const SWEAR_RES = [
@@ -203,6 +203,7 @@ const SWEAR_RES = [
   /^[وف]?(?:ال|[بلك])?سيكو$/,
   /^sex(?:y)?$/,
   /^(?:يا|[يبولكفت])?كسم(?:ك|كم|ي|ه|ها|هم|نا|ات|ين)?$/,
+  /^[وف]?(?:يا|[يبولكفت])?كس(?:ك|كم|ي|نا|ها|هم)$/,
 ];
 const SWEAR_PHRASE = /(?:^|[^\p{L}\p{N}])[وف]?(?:يا\s*)?ي?(?:ابن|بن|بنت)\s+الوسخ(?:ه|ات|ين)?(?![\p{L}\p{N}])/u;
 const hasSwear = (text) => {
