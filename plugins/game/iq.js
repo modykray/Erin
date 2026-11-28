@@ -237,8 +237,9 @@ const handler = async (m, { conn, text }) => {
   global.iqActive[m.chat] = { pending: true, timeout: null };
   if (!pool.length) { try { await conn.sendPresenceUpdate('composing', m.chat); } catch {} }
   let g;
-  try { g = await pick(m.chat); } catch (e) { g = BANK[Math.floor(Math.random() * BANK.length)]; } finally { delete global.iqActive[m.chat]; }
-  const msg = await conn.sendMessage(m.chat, { text: `${INTROS[Math.floor(Math.random() * INTROS.length)]}\n\n${g.q}\n\n⏱️ معاك دقيقة. رد على رسالة السؤال بإجابتك\n💰 الإجابة الصح بـ ${BASE_PTS} نقط` }, { quoted: m });
+  try { g = await pick(m.chat); } catch (e) { g = BANK[Math.floor(Math.random() * BANK.length)]; }
+  let msg;
+  try { msg = await conn.sendMessage(m.chat, { text: `${INTROS[Math.floor(Math.random() * INTROS.length)]}\n\n${g.q}\n\n⏱️ معاك دقيقة. رد على رسالة السؤال بإجابتك\n💰 الإجابة الصح بـ ${BASE_PTS} نقط` }, { quoted: m }); } catch (e) { delete global.iqActive[m.chat]; throw e; }
   global.iqActive[m.chat] = {
     g, msgId: msg.key.id, wrong: 0, hint: false,
     timeout: setTimeout(() => {
