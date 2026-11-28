@@ -415,15 +415,17 @@ const nomentionHook = async (m) => {
     const chat = m.chat || m.key?.remoteJid || '';
     if (!chat.endsWith('@g.us')) return false;
     const ments = [...(m.mentionedJid || []), ...(m.msg?.contextInfo?.mentionedJid || [])].filter(Boolean).map(numOf);
+    if (ments.length) console.log('[ERIN-NOMENTION] mentions', JSON.stringify(ments), 'chat', chat);
     if (!ments.some(x => DEV_IDS.has(x))) return false;
     const senders = [m.sender, m.key?.participant, m.key?.participantAlt].filter(Boolean).map(numOf);
-    if (senders.some(x => DEV_IDS.has(x))) return false;
+    if (senders.some(x => DEV_IDS.has(x))) { console.log('[ERIN-NOMENTION] skip: dev self-mention'); return false; }
     const me = [client.sock?.user?.id, client.sock?.user?.lid].filter(Boolean).map(numOf);
     if (senders.some(x => me.includes(x))) return false;
     const now = Date.now();
     if (now - (nomentionLast.get(chat) || 0) < 5000) return false;
     nomentionLast.set(chat, now);
     await client.sock.sendMessage(chat, { sticker: NOMENTION_BUF }, { quoted: m });
+    console.log('[ERIN-NOMENTION] sticker sent in', chat);
   } catch (e) { console.error('[ERIN-ERR] nomention', e?.message); }
   return false;
 };
