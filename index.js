@@ -268,10 +268,11 @@ const powerTimer = setInterval(() => {
   cs.beforeHandlers.unshift(async (m, a) => { try { if (!m.isOwner && isOwnerMsg(m)) { m.isOwner = true; if (a) a.isOwner = true; } } catch {} return false; });
   cs.beforeHandlers.push(stickerHook);
   cs.beforeHandlers.push(khodHook);
-  cs.beforeHandlers.push(swearHook);
-  cs.beforeHandlers.push(linkHook);
   cs.beforeHandlers.push(async (m) => (globalThis.erinOff ? false : (globalThis.erinStoryHook ? globalThis.erinStoryHook(m) : false)));
   cs.beforeHandlers.unshift(async (m) => (globalThis.erinOff ? false : protectHook(m)));
+  // moderation filters run before the admin-only/power gate so they work in every mode
+  cs.beforeHandlers.unshift(linkHook);
+  cs.beforeHandlers.unshift(swearHook);
   console.log('[ERIN-POWER] hook installed, off =', globalThis.erinOff);
 }, 1000);
 
