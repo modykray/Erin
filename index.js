@@ -318,6 +318,7 @@ const powerTimer = setInterval(() => {
   cs.beforeHandlers.push(khodHook);
   cs.beforeHandlers.push(nomentionHook);
   cs.beforeHandlers.push(khazHook);
+  cs.beforeHandlers.push(gamedHook);
   cs.beforeHandlers.push(async (m) => (globalThis.erinOff ? false : (globalThis.erinStoryHook ? globalThis.erinStoryHook(m) : false)));
   cs.beforeHandlers.unshift(async (m) => (globalThis.erinOff ? false : protectHook(m)));
   // moderation filters run before the admin-only/power gate so they work in every mode
@@ -428,6 +429,24 @@ const nomentionHook = async (m) => {
     await client.sock.sendMessage(chat, { sticker: NOMENTION_BUF }, { quoted: m });
     console.log('[ERIN-NOMENTION] sticker sent in', chat);
   } catch (e) { console.error('[ERIN-ERR] nomention', e?.message); }
+  return false;
+};
+/* ===== word جامد anywhere in a group message -> voice note ===== */
+let GAMED_BUF = null; try { GAMED_BUF = fs.readFileSync(new URL('./assets/gamed.ogg', import.meta.url)); } catch (e) { console.error('[ERIN-ERR] gamed load', e?.message); }
+const gamedLast = new Map();
+const GAMED_RE = /^[وف]?(?:ال|[بلكو])?جامد(?:ه|ين|ون|ات)?$/;
+const gamedHook = async (m) => {
+  try {
+    if (globalThis.erinOff || m.key?.fromMe || !GAMED_BUF) return false;
+    const chat = m.chat || m.key?.remoteJid || '';
+    if (!chat.endsWith('@g.us')) return false;
+    const toks = normAr(m.text || m.body || '').split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+    if (!toks.some(t => GAMED_RE.test(t))) return false;
+    const now = Date.now();
+    if (now - (gamedLast.get(chat) || 0) < 5000) return false;
+    gamedLast.set(chat, now);
+    await client.sock.sendMessage(chat, { audio: GAMED_BUF, mimetype: 'audio/ogg; codecs=opus', ptt: true }, { quoted: m });
+  } catch (e) { console.error('[ERIN-ERR] gamed', e?.message); }
   return false;
 };
 /* ===== exact word خازوق in a group -> voice note ===== */
