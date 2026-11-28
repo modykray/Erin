@@ -206,10 +206,11 @@ const SWEAR_RES = [
   /^[وف]?(?:يا|[يبولكفت])?كس(?:ك|كم|ي|نا|ها|هم)$/,
 ];
 const SWEAR_PHRASE = /(?:^|[^\p{L}\p{N}])[وف]?(?:يا\s*)?ي?(?:ابن|بن|بنت)\s+الوسخ(?:ه|ات|ين)?(?![\p{L}\p{N}])/u;
+const COUSCOUS_RE = /^[وف]?(?:ال|[بل])?كسكس[يه]?$/;
 const hasSwear = (text) => {
   if (SWEAR_PHRASE.test(normAr(text))) return true;
   const toks = normAr(text).split(/[^\p{L}\p{N}]+/u).filter(Boolean);
-  return toks.some(t => SWEAR_WORDS.has(t) || (t.length > 2 && t[0] === 'و' && SWEAR_WORDS.has(t.slice(1))) || SWEAR_RES.some(r => r.test(t)));
+  return toks.some(t => !COUSCOUS_RE.test(t) && (SWEAR_WORDS.has(t) || (t.length > 2 && t[0] === 'و' && SWEAR_WORDS.has(t.slice(1))) || SWEAR_RES.some(r => r.test(t))));
 };
 globalThis.erinHasSwear = hasSwear;
 globalThis.erinSwear = {
