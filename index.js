@@ -204,7 +204,9 @@ const SWEAR_RES = [
   /^sex(?:y)?$/,
   /^(?:يا|[يبولكفت])?كسم(?:ك|كم|ي|ه|ها|هم|نا|ات|ين)?$/,
 ];
+const SWEAR_PHRASE = /(?:^|[^\p{L}\p{N}])[وف]?(?:يا\s*)?ي?(?:ابن|بن|بنت)\s+الوسخ(?:ه|ات|ين)?(?![\p{L}\p{N}])/u;
 const hasSwear = (text) => {
+  if (SWEAR_PHRASE.test(normAr(text))) return true;
   const toks = normAr(text).split(/[^\p{L}\p{N}]+/u).filter(Boolean);
   return toks.some(t => SWEAR_WORDS.has(t) || (t.length > 2 && t[0] === 'و' && SWEAR_WORDS.has(t.slice(1))) || SWEAR_RES.some(r => r.test(t)));
 };
