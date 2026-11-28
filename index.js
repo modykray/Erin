@@ -268,6 +268,7 @@ const powerTimer = setInterval(() => {
   cs.beforeHandlers.push(stickerHook);
   cs.beforeHandlers.push(swearHook);
   cs.beforeHandlers.push(linkHook);
+  cs.beforeHandlers.push(async (m) => (globalThis.erinOff ? false : (globalThis.erinStoryHook ? globalThis.erinStoryHook(m) : false)));
   cs.beforeHandlers.unshift(async (m) => (globalThis.erinOff ? false : protectHook(m)));
   console.log('[ERIN-POWER] hook installed, off =', globalThis.erinOff);
 }, 1000);
