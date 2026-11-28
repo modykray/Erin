@@ -7,16 +7,19 @@ const handler = async (m, { conn }) => {
   if (!isOwner) return m.reply('*🔒 الأمر ده للمطور بس*');
   if (!m.quoted) return m.reply('*📎 رد على الرسالة اللي عايز تحفظها بـ .دليل*');
   try {
-    const ctx = m.msg?.contextInfo || m.message?.extendedTextMessage?.contextInfo || m.raw?.message?.extendedTextMessage?.contextInfo || {};
-    let qm = ctx.quotedMessage || {};
+    const ctx = m.msg?.contextInfo || m.message?.extendedTextMessage?.contextInfo || {};
+    let qm = ctx.quotedMessage || m.quoted.message || {};
     let wasVO = false;
-    const w = qm.viewOnceMessage || qm.viewOnceMessageV2 || qm.viewOnceMessageV2Extension;
-    if (w?.message) { qm = w.message; wasVO = true; }
-    const vk = Object.keys(qm).find(k => /^(image|video|audio)Message$/.test(k));
-    if (wasVO && !vk) return conn.sendMessage(OWNER_DM, { text: '*⚠️ دي رسالة لمرة واحدة بس مقدرتش أقرأ محتواها.*' });
-    if (wasVO || (vk && !m.quoted.download)) {
-      m.__vo = { node: qm[vk], type: vk.replace('Message', ''), vo: wasVO };
+    for (let i = 0; i < 6; i++) {
+      const w = qm.viewOnceMessage || qm.viewOnceMessageV2 || qm.viewOnceMessageV2Extension || qm.ephemeralMessage || qm.documentWithCaptionMessage || qm.editedMessage;
+      if (!w?.message) break;
+      if (qm.viewOnceMessage || qm.viewOnceMessageV2 || qm.viewOnceMessageV2Extension) wasVO = true;
+      qm = w.message;
     }
+    const vk = Object.keys(qm).find(k => /^(image|video|audio|document|sticker|ptv)Message$/.test(k));
+    if (vk && qm[vk]?.viewOnce) wasVO = true;
+    console.log('[EVIDENCE] keys', Object.keys(qm).join(','), 'vo', wasVO);
+    m.__vo = vk ? { node: qm[vk], type: vk === 'ptvMessage' ? 'video' : vk.replace('Message', ''), vo: wasVO } : null;
     let sender = m.quoted.sender || ctx.participant || '';
     let groupName = 'خاص';
     if (m.isGroup) {
@@ -31,11 +34,13 @@ const handler = async (m, { conn }) => {
     const head = `*📁 نسخة دليل خاصة بالمطور فقط${m.__vo?.vo ? ' (رسالة لمرة واحدة)' : ''}*\n👤 المرسل: ${numOf(sender)}\n👥 المكان: ${groupName}\n🕒 وقت الحفظ: ${when}`;
     if (m.__vo) {
       const { node, type } = m.__vo;
+      const isDoc = type === 'document' || type === 'sticker';
       let buf = Buffer.from([]);
       try { for await (const c of await downloadContentFromMessage(node, type)) buf = Buffer.concat([buf, c]); } catch (e) { buf = null; }
-      if (!buf || !buf.length) return conn.sendMessage(OWNER_DM, { text: head + '\n\n⚠️ دي رسالة لمرة واحدة بس فشل فك تشفير الميديا (ممكن اتفتحت أو انتهت).' });
+      if (!buf || !buf.length) return conn.sendMessage(OWNER_DM, { text: head + '\n\n⚠️ فشل تحميل الميديا (ممكن انتهت صلاحيتها أو البوت ماستلمهاش).' });
       const cap = head + (node.caption ? '\n\n💬 ' + node.caption : '');
-      if (type === 'image') await conn.sendMessage(OWNER_DM, { image: buf, caption: cap });
+      if (isDoc) await conn.sendMessage(OWNER_DM, { document: buf, mimetype: node.mimetype || 'application/octet-stream', fileName: node.fileName || 'evidence', caption: cap });
+      else if (type === 'image') await conn.sendMessage(OWNER_DM, { image: buf, caption: cap });
       else if (type === 'video') await conn.sendMessage(OWNER_DM, { video: buf, caption: cap });
       else { await conn.sendMessage(OWNER_DM, { text: head }); await conn.sendMessage(OWNER_DM, { audio: buf, mimetype: node.mimetype || 'audio/ogg; codecs=opus' }); }
       try { await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } }); } catch {}
